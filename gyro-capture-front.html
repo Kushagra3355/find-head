@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Scalp Capture — Guided</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        color: #fff;
+        font-family:
+          "SF Pro Display",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      .app {
+        width: 100%;
+        height: 100dvh;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* ── Camera ── */
+      video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      canvas#overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* ── Flash ── */
+      .flash {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+        transition: opacity 0.12s ease-out;
+      }
+
+      /* ── Top HUD ── */
+      .top-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: env(safe-area-inset-top, 12px) 20px 14px;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.75) 0%,
+          transparent 100%
+        );
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .title-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .title {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      .subtitle {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+        font-weight: 500;
+      }
+
+      /* ── Angle Gauge (right side) ── */
+      .gauge {
+        width: 56px;
+        height: 56px;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .gauge svg {
+        width: 100%;
+        height: 100%;
+      }
+      .gauge-val {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        transition: color 0.15s;
+      }
+
+      /* ── Bottom Panel ── */
+      .bottom {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 0 20px calc(env(safe-area-inset-bottom, 8px) + 10px);
+        background: linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.82) 60%,
+          transparent 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding-top: 30px;
+      }
+
+      /* Status indicators */
+      .status-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 12px;
+        font-weight: 600;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+      }
+      .chip.pass {
+        border-color: rgba(0, 230, 138, 0.3);
+        background: rgba(0, 230, 138, 0.06);
+      }
+      .chip.fail {
+        border-color: rgba(255, 107, 107, 0.2);
+      }
+      .pip {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        transition:
+          background 0.2s,
+          box-shadow 0.2s;
+      }
+      .pip.on {
+        background: #00e68a;
+        box-shadow: 0 0 6px rgba(0, 230, 138, 0.6);
+      }
+      .pip.off {
+        background: #ff6b6b;
+        box-shadow: 0 0 6px rgba(255, 107, 107, 0.4);
+      }
+      .pip.warn {
+        background: #ffa726;
+        box-shadow: 0 0 6px rgba(255, 167, 38, 0.4);
+      }
+
+      /* Guide message */
+      .guide {
+        text-align: center;
+        min-height: 42px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .guide-main {
+        font-size: 16px;
+        font-weight: 700;
+        transition: color 0.15s;
+      }
+      .guide-main.ok {
+        color: #00e68a;
+      }
+      .guide-main.bad {
+        color: #ff6b6b;
+      }
+      .guide-main.warn {
+        color: #ffa726;
+      }
+      .guide-sub {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        font-weight: 500;
+      }
+
+      /* Shutter */
+      .shutter-wrap {
+        padding: 6px 0;
+      }
+      .shutter {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.25);
+        background: transparent;
+        position: relative;
+        cursor: pointer;
+        transition:
+          border-color 0.25s,
+          opacity 0.2s;
+      }
+      .shutter::after {
+        content: "";
+        position: absolute;
+        inset: 5px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        transition:
+          background 0.25s,
+          transform 0.1s;
+      }
+      .shutter:active::after {
+        transform: scale(0.85);
+      }
+      .shutter.ready {
+        border-color: #00e68a;
+        animation: pulse 1.8s ease infinite;
+      }
+      .shutter.ready::after {
+        background: #00e68a;
+      }
+      .shutter:disabled {
+        opacity: 0.18;
+        cursor: default;
+        animation: none;
+      }
+      .shutter:disabled:active::after {
+        transform: none;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(0, 230, 138, 0.35);
+        }
+        70% {
+          box-shadow: 0 0 0 18px rgba(0, 230, 138, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(0, 230, 138, 0);
+        }
+      }
+
+      /* ── Welcome Screen ── */
+      .welcome {
+        position: absolute;
+        inset: 0;
+        z-index: 100;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        text-align: center;
+        transition: opacity 0.4s ease;
+      }
+      .welcome.hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .welcome h1 {
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        letter-spacing: -0.3px;
+      }
+      .welcome p {
+        font-size: 14px;
+        color: #777;
+        max-width: 300px;
+        line-height: 1.55;
+        margin-bottom: 8px;
+      }
+      .angle-demo {
+        width: 200px;
+        height: 200px;
+        margin: 16px 0;
+      }
+      .angle-demo svg {
+        width: 100%;
+        height: 100%;
+      }
+      .start-btn {
+        margin-top: 20px;
+        padding: 16px 52px;
+        border: none;
+        border-radius: 50px;
+        background: #fff;
+        color: #000;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        letter-spacing: 0.2px;
+      }
+      .start-btn:active {
+        opacity: 0.85;
+      }
+      .perm-note {
+        font-size: 10px;
+        color: #444;
+        margin-top: 14px;
+        max-width: 260px;
+        line-height: 1.4;
+      }
+      .err {
+        font-size: 12px;
+        color: #ff6b6b;
+        margin-top: 10px;
+        display: none;
+        max-width: 300px;
+      }
+
+      /* ── Review Screen ── */
+      .review {
+        position: absolute;
+        inset: 0;
+        z-index: 60;
+        background: rgba(0, 0, 0, 0.92);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        gap: 16px;
+      }
+      .review.show {
+        display: flex;
+      }
+      .review img {
+        max-width: 90%;
+        max-height: 55vh;
+        border-radius: 14px;
+        border: 2px solid #1a1a1a;
+      }
+      .rev-label {
+        font-size: 13px;
+        color: #666;
+        font-weight: 600;
+      }
+      .rev-meta {
+        font-size: 11px;
+        color: #444;
+        font-weight: 500;
+      }
+      .rev-btns {
+        display: flex;
+        gap: 12px;
+      }
+      .rev-btns button {
+        padding: 14px 28px;
+        border: none;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn-retake {
+        background: #1a1a1a;
+        color: #fff;
+      }
+      .btn-save {
+        background: #00e68a;
+        color: #000;
+      }
+
+      /* ── Camera Switch Button ── */
+      .cam-switch {
+        position: absolute;
+        top: env(safe-area-inset-top, 12px);
+        right: 80px;
+        z-index: 12;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.2s,
+          transform 0.25s;
+      }
+      .cam-switch:active {
+        transform: rotate(180deg);
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .cam-label {
+        position: absolute;
+        top: calc(env(safe-area-inset-top, 12px) + 44px);
+        right: 72px;
+        z-index: 12;
+        font-size: 9px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.3);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: none;
+        text-align: center;
+        width: 56px;
+      }
+
+      /* Mirror front camera */
+      video.mirrored {
+        transform: scaleX(-1);
+      }
+
+      /* ── Desktop Sim Hint ── */
+      .sim-hint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.2);
+        text-align: center;
+        pointer-events: none;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- Welcome -->
+      <div class="welcome" id="welcome">
+        <h1>Scalp Angle Capture</h1>
+        <p>
+          Hold the phone at a 45° angle above the patient's head. The shutter
+          unlocks only when the angle is correct.
+        </p>
+        <div class="angle-demo">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Head -->
+            <circle
+              cx="100"
+              cy="145"
+              r="28"
+              fill="#111"
+              stroke="#333"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="100"
+              cy="170"
+              rx="18"
+              ry="10"
+              fill="none"
+              stroke="#333"
+              stroke-width="1"
+            />
+            <!-- Highlight scalp zone -->
+            <path
+              d="M78 132 Q100 112 122 132"
+              fill="none"
+              stroke="#00e68a"
+              stroke-width="2.5"
+              opacity=".6"
+            />
+            <!-- Phone at 45° -->
+            <g transform="translate(58,58) rotate(45)">
+              <rect
+                x="-10"
+                y="-16"
+                width="20"
+                height="32"
+                rx="3"
+                fill="#222"
+                stroke="#555"
+                stroke-width="1.2"
+              />
+              <circle
+                cx="0"
+                cy="-8"
+                r="3"
+                fill="none"
+                stroke="#666"
+                stroke-width=".8"
+              />
+            </g>
+            <!-- Angle arc -->
+            <path
+              d="M58 58 L100 145"
+              stroke="#00e68a"
+              stroke-width=".8"
+              stroke-dasharray="3 3"
+              opacity=".4"
+            />
+            <!-- 45° label -->
+            <text
+              x="48"
+              y="100"
+              font-size="12"
+              fill="#00e68a"
+              font-weight="700"
+              opacity=".7"
+            >
+              45°
+            </text>
+            <!-- Distance label -->
+            <text
+              x="108"
+              y="100"
+              font-size="10"
+              fill="#4fc3f7"
+              font-weight="600"
+              opacity=".5"
+            >
+              20-30 cm
+            </text>
+          </svg>
+        </div>
+        <p style="font-size: 12px; color: #555">
+          Hand the phone to someone standing beside the patient.
+        </p>
+        <button class="start-btn" id="startBtn">Begin Capture</button>
+        <div class="perm-note">Requires camera and motion sensor access</div>
+        <div class="err" id="startErr"></div>
+      </div>
+
+      <!-- Camera -->
+      <video id="cam" autoplay playsinline muted></video>
+      <button class="cam-switch" id="camSwitch" title="Switch camera">
+        🔄
+      </button>
+      <div class="cam-label" id="camLabel">rear</div>
+      <canvas id="overlay"></canvas>
+      <div class="flash" id="flash"></div>
+
+      <!-- Top HUD -->
+      <div class="top-bar" id="hud" style="display: none">
+        <div class="title-group">
+          <div class="title">Scalp Capture</div>
+          <div class="subtitle" id="subtitle">Target: 45° tilt · Rear cam</div>
+        </div>
+        <div class="gauge" id="gauge">
+          <svg viewBox="0 0 56 56">
+            <!-- Track -->
+            <circle
+              cx="28"
+              cy="28"
+              r="23"
+              fill="none"
+              stroke="rgba(255,255,255,.08)"
+              stroke-width="4"
+              stroke-dasharray="144.51"
+              stroke-dashoffset="36.13"
+              transform="rotate(135 28 28)"
+              stroke-linecap="round"
+            />
+            <!-- Progress arc — updated via JS -->
+            <circle
+              id="gaugeArc"
+              cx="28"
+              cy="28"
+              r="23"
+              fill="none"
+              stroke="#ff6b6b"
+              stroke-width="4"
+              stroke-dasharray="144.51"
+              stroke-dashoffset="144.51"
+              transform="rotate(135 28 28)"
+              stroke-linecap="round"
+              style="
+                transition:
+                  stroke-dashoffset 0.12s ease-out,
+                  stroke 0.2s;
+              "
+            />
+            <!-- Target tick at 45° position (50% of 270° arc) → 1/6 of arc -->
+            <circle
+              cx="28"
+              cy="28"
+              r="23"
+              fill="none"
+              stroke="rgba(0,230,138,.35)"
+              stroke-width="6"
+              stroke-dasharray="2 142.51"
+              stroke-dashoffset="120.38"
+              transform="rotate(135 28 28)"
+              stroke-linecap="round"
+            />
+          </svg>
+          <div class="gauge-val" id="gaugeVal">—°</div>
+        </div>
+      </div>
+
+      <!-- Bottom Panel -->
+      <div class="bottom" id="bottomPanel" style="display: none">
+        <div class="status-row">
+          <div class="chip fail" id="chipAngle">
+            <div class="pip off" id="pipAngle"></div>
+            <span id="lblAngle">Angle</span>
+          </div>
+          <div class="chip fail" id="chipRoll">
+            <div class="pip off" id="pipRoll"></div>
+            <span id="lblRoll">Level</span>
+          </div>
+        </div>
+        <div class="guide">
+          <div class="guide-main bad" id="guideMsg">Initializing…</div>
+          <div class="guide-sub" id="guideSub"></div>
+        </div>
+        <div class="shutter-wrap">
+          <button class="shutter" id="shutter" disabled></button>
+        </div>
+      </div>
+
+      <!-- Review -->
+      <div class="review" id="review">
+        <img id="revImg" src="" alt="Captured" />
+        <div class="rev-label">Scalp Capture</div>
+        <div class="rev-meta" id="revMeta"></div>
+        <div class="rev-btns">
+          <button class="btn-retake" id="btnRetake">Retake</button>
+          <button class="btn-save" id="btnSave">Save Photo</button>
+        </div>
+      </div>
+
+      <div class="sim-hint" id="simHint">
+        Move mouse to simulate tilt<br />(Y axis = beta, X axis = gamma)
+      </div>
+    </div>
+
+    <script>
+      /* ═══════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════ */
+      const TARGET_BETA = 45; // degrees — the required tilt
+      const TARGET_GAMMA = 0; // degrees — phone should be level (no roll)
+      const BETA_TOL = 1; // ± tolerance for tilt
+      const GAMMA_TOL = 3; // ± tolerance for roll
+      const HOLD_MS = 600; // must hold steady for this long before shutter unlocks
+
+      /* ═══════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════ */
+      let beta = 0,
+        gamma = 0;
+      let sensorActive = false;
+      let holdStart = 0;
+      let isReady = false;
+      let captured = false;
+      let capturedDataURL = "";
+      let captureBeta = 0;
+
+      /* Camera state */
+      let currentFacing = "environment"; // 'environment' = rear, 'user' = front
+      let currentStream = null;
+      let hasMultipleCameras = false;
+
+      /* Elements */
+      const cam = document.getElementById("cam");
+      const cv = document.getElementById("overlay");
+      const ctx = cv.getContext("2d");
+      const flashEl = document.getElementById("flash");
+
+      /* ═══════════════════════════════════════════════
+   START
+   ═══════════════════════════════════════════════ */
+      document
+        .getElementById("startBtn")
+        .addEventListener("click", async () => {
+          const errEl = document.getElementById("startErr");
+          errEl.style.display = "none";
+
+          try {
+            // Request motion permission (iOS 13+)
+            if (
+              typeof DeviceOrientationEvent !== "undefined" &&
+              typeof DeviceOrientationEvent.requestPermission === "function"
+            ) {
+              const perm = await DeviceOrientationEvent.requestPermission();
+              if (perm !== "granted")
+                throw new Error("Motion sensor permission denied.");
+            }
+
+            // Detect multiple cameras
+            try {
+              const tempStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+              });
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              tempStream.getTracks().forEach((t) => t.stop());
+              const cams = devices.filter((d) => d.kind === "videoinput");
+              hasMultipleCameras = cams.length > 1;
+            } catch {
+              hasMultipleCameras = false;
+            }
+
+            // Start default (rear) camera
+            await startCamera("environment");
+
+            // Orientation listener
+            window.addEventListener("deviceorientation", (e) => {
+              sensorActive = true;
+              beta = e.beta ?? 0;
+              gamma = e.gamma ?? 0;
+            });
+
+            // Desktop mouse simulation
+            if (!("ontouchstart" in window) && !navigator.maxTouchPoints) {
+              document.getElementById("simHint").style.display = "block";
+              window.addEventListener("mousemove", (e) => {
+                sensorActive = true;
+                beta = (e.clientY / window.innerHeight) * 90;
+                gamma = (e.clientX / window.innerWidth - 0.5) * 60;
+              });
+            }
+
+            // Show UI
+            document.getElementById("welcome").classList.add("hide");
+            document.getElementById("hud").style.display = "flex";
+            document.getElementById("bottomPanel").style.display = "flex";
+
+            // Show switch button if multiple cameras
+            if (hasMultipleCameras) {
+              document.getElementById("camSwitch").style.display = "flex";
+              document.getElementById("camLabel").style.display = "block";
+            }
+
+            requestAnimationFrame(loop);
+          } catch (err) {
+            errEl.textContent = err.message || "Could not initialize.";
+            errEl.style.display = "block";
+          }
+        });
+
+      /* ═══════════════════════════════════════════════
+   CAMERA START / SWITCH
+   ═══════════════════════════════════════════════ */
+      async function startCamera(facing) {
+        // Stop existing stream
+        if (currentStream) {
+          currentStream.getTracks().forEach((t) => t.stop());
+        }
+
+        currentFacing = facing;
+        const isFront = facing === "user";
+
+        // Get stream
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: facing } },
+            audio: false,
+          });
+        } catch {
+          // Fallback without exact constraint
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: facing } },
+            audio: false,
+          });
+        }
+
+        currentStream = stream;
+        cam.srcObject = stream;
+        await cam.play();
+
+        // Mirror front camera for natural preview
+        if (isFront) {
+          cam.classList.add("mirrored");
+        } else {
+          cam.classList.remove("mirrored");
+        }
+
+        // Torch only on rear camera
+        const track = stream.getVideoTracks()[0];
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        if (!isFront && caps.torch) {
+          track
+            .applyConstraints({ advanced: [{ torch: true }] })
+            .catch(() => {});
+        }
+
+        // Update label
+        document.getElementById("camLabel").textContent = isFront
+          ? "front"
+          : "rear";
+        document.getElementById("subtitle").textContent =
+          "Target: 45° tilt · " + (isFront ? "Front cam" : "Rear cam");
+
+        // Reset hold timer on switch
+        holdStart = 0;
+        isReady = false;
+      }
+
+      // Switch button
+      document
+        .getElementById("camSwitch")
+        .addEventListener("click", async () => {
+          const next = currentFacing === "environment" ? "user" : "environment";
+          await startCamera(next);
+        });
+
+      /* ═══════════════════════════════════════════════
+   MAIN LOOP
+   ═══════════════════════════════════════════════ */
+      function loop() {
+        if (captured) {
+          requestAnimationFrame(loop);
+          return;
+        }
+
+        const dpr = window.devicePixelRatio || 1;
+        const W = (cv.width = cv.clientWidth * dpr);
+        const H = (cv.height = cv.clientHeight * dpr);
+        ctx.clearRect(0, 0, W, H);
+
+        // ── Evaluate angle ──
+        const betaErr = Math.abs(beta - TARGET_BETA);
+        const gammaErr = Math.abs(gamma - TARGET_GAMMA);
+        const tiltOk = betaErr <= BETA_TOL;
+        const rollOk = gammaErr <= GAMMA_TOL;
+        const allOk = tiltOk && rollOk;
+
+        // Hold timer
+        if (allOk) {
+          if (!holdStart) holdStart = Date.now();
+          isReady = Date.now() - holdStart >= HOLD_MS;
+        } else {
+          holdStart = 0;
+          isReady = false;
+        }
+
+        // ── Draw oval reticle ──
+        const ocx = W / 2,
+          ocy = H / 2;
+        const rx = Math.min(W, H) * 0.26;
+        const ry = rx * 1.2;
+
+        // Darken outside oval
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.beginPath();
+        ctx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Oval border
+        const borderColor = allOk ? "#00e68a" : "#ff6b6b";
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 2.5 * dpr;
+        ctx.beginPath();
+        ctx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Glow when ready
+        if (isReady) {
+          ctx.save();
+          ctx.shadowColor = "rgba(0,230,138,0.5)";
+          ctx.shadowBlur = 24 * dpr;
+          ctx.strokeStyle = "rgba(0,230,138,0.15)";
+          ctx.lineWidth = 8 * dpr;
+          ctx.beginPath();
+          ctx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Crosshair
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(ocx - 8 * dpr, ocy);
+        ctx.lineTo(ocx + 8 * dpr, ocy);
+        ctx.moveTo(ocx, ocy - 8 * dpr);
+        ctx.lineTo(ocx, ocy + 8 * dpr);
+        ctx.stroke();
+
+        // Direction arrows when angle is wrong
+        if (!allOk) {
+          let ax = 0,
+            ay = 0;
+          if (!tiltOk) ay = beta < TARGET_BETA ? 1 : -1;
+          if (!rollOk) ax = gamma < TARGET_GAMMA ? -1 : 1;
+          const arrowLen = 22 * dpr;
+          const arrowX = ocx + ax * rx * 0.5;
+          const arrowY = ocy + ay * ry * 0.5;
+          const angle = Math.atan2(ay, ax);
+
+          ctx.save();
+          ctx.translate(arrowX, arrowY);
+          ctx.rotate(angle);
+          ctx.fillStyle = "rgba(255,107,107,0.8)";
+          ctx.beginPath();
+          ctx.moveTo(arrowLen, 0);
+          ctx.lineTo(-arrowLen * 0.35, -arrowLen * 0.5);
+          ctx.lineTo(-arrowLen * 0.35, arrowLen * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // ── Update gauge arc ──
+        // Arc spans 270° (from 135° to 405°). Map beta 0-90 to 0-100%.
+        const betaClamped = Math.max(0, Math.min(90, beta));
+        const pct = betaClamped / 90;
+        const arcLen = 144.51; // 2π × 23 × (270/360)
+        const offset = arcLen * (1 - pct);
+        const gaugeArc = document.getElementById("gaugeArc");
+        gaugeArc.setAttribute("stroke-dashoffset", offset.toFixed(2));
+        gaugeArc.setAttribute(
+          "stroke",
+          tiltOk ? "#00e68a" : betaErr < BETA_TOL * 2 ? "#ffa726" : "#ff6b6b",
+        );
+
+        const gaugeVal = document.getElementById("gaugeVal");
+        gaugeVal.textContent = Math.round(beta) + "°";
+        gaugeVal.style.color = tiltOk ? "#00e68a" : "#fff";
+
+        // ── Update indicators ──
+        const pipAngle = document.getElementById("pipAngle");
+        const pipRoll = document.getElementById("pipRoll");
+        const chipAngle = document.getElementById("chipAngle");
+        const chipRoll = document.getElementById("chipRoll");
+        const lblAngle = document.getElementById("lblAngle");
+        const lblRoll = document.getElementById("lblRoll");
+
+        pipAngle.className =
+          "pip " + (tiltOk ? "on" : betaErr < BETA_TOL * 2 ? "warn" : "off");
+        chipAngle.className = "chip " + (tiltOk ? "pass" : "fail");
+        lblAngle.textContent = tiltOk
+          ? Math.round(beta) + "° ✓"
+          : Math.round(beta) + "°";
+
+        pipRoll.className = "pip " + (rollOk ? "on" : "off");
+        chipRoll.className = "chip " + (rollOk ? "pass" : "fail");
+        lblRoll.textContent = rollOk
+          ? "Level ✓"
+          : gamma > 0
+            ? "Tilted right"
+            : "Tilted left";
+
+        // ── Guide message ──
+        const gMsg = document.getElementById("guideMsg");
+        const gSub = document.getElementById("guideSub");
+
+        if (isReady) {
+          gMsg.textContent = "Tap to capture";
+          gMsg.className = "guide-main ok";
+          gSub.textContent = "Angle and level are correct — hold steady";
+        } else if (allOk) {
+          gMsg.textContent = "Hold steady…";
+          gMsg.className = "guide-main ok";
+          gSub.textContent = "Almost there";
+        } else {
+          const hints = [];
+          if (!tiltOk) {
+            hints.push(
+              beta < TARGET_BETA
+                ? "Tilt phone forward ↓ (" +
+                    Math.round(beta) +
+                    "° → " +
+                    TARGET_BETA +
+                    "°)"
+                : "Tilt phone upright ↑ (" +
+                    Math.round(beta) +
+                    "° → " +
+                    TARGET_BETA +
+                    "°)",
+            );
+          }
+          if (!rollOk) {
+            hints.push(
+              gamma < TARGET_GAMMA ? "Rotate left ←" : "Rotate right →",
+            );
+          }
+          gMsg.textContent = hints.join("  ·  ");
+          gMsg.className =
+            "guide-main " + (betaErr < BETA_TOL * 2 && rollOk ? "warn" : "bad");
+          gSub.textContent = "Target: " + TARGET_BETA + "° tilt, level hold";
+        }
+
+        // ── Shutter state ──
+        const sh = document.getElementById("shutter");
+        sh.disabled = !isReady;
+        sh.className = "shutter" + (isReady ? " ready" : "");
+
+        requestAnimationFrame(loop);
+      }
+
+      /* ═══════════════════════════════════════════════
+   CAPTURE
+   ═══════════════════════════════════════════════ */
+      document.getElementById("shutter").addEventListener("click", () => {
+        if (!isReady) return;
+        captured = true;
+        captureBeta = Math.round(beta);
+
+        // Flash
+        flashEl.style.opacity = "0.5";
+        setTimeout(() => {
+          flashEl.style.opacity = "0";
+        }, 130);
+
+        // Snapshot — mirror-correct for front camera
+        const sc = document.createElement("canvas");
+        sc.width = cam.videoWidth || 1280;
+        sc.height = cam.videoHeight || 720;
+        const sctx = sc.getContext("2d");
+        const isFront = currentFacing === "user";
+        if (isFront) {
+          // Flip horizontally so the saved image matches reality (not mirrored)
+          sctx.translate(sc.width, 0);
+          sctx.scale(-1, 1);
+        }
+        sctx.drawImage(cam, 0, 0, sc.width, sc.height);
+        capturedDataURL = sc.toDataURL("image/jpeg", 0.92);
+
+        // Show review
+        document.getElementById("revImg").src = capturedDataURL;
+        const camName = isFront ? "Front cam" : "Rear cam";
+        document.getElementById("revMeta").textContent =
+          "Captured at " +
+          captureBeta +
+          "° tilt · " +
+          camName +
+          " · " +
+          new Date().toLocaleTimeString();
+        document.getElementById("review").classList.add("show");
+      });
+
+      /* ── Retake ── */
+      document.getElementById("btnRetake").addEventListener("click", () => {
+        captured = false;
+        isReady = false;
+        holdStart = 0;
+        document.getElementById("review").classList.remove("show");
+      });
+
+      /* ── Save ── */
+      document.getElementById("btnSave").addEventListener("click", () => {
+        const blob = dataURLtoBlob(capturedDataURL);
+        const camTag = currentFacing === "user" ? "front" : "rear";
+        const file = new File(
+          [blob],
+          "scalp_45deg_" + camTag + "_" + Date.now() + ".jpg",
+          { type: "image/jpeg" },
+        );
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator
+            .share({ files: [file], title: "Scalp Capture" })
+            .catch(() => {
+              blobDownload(blob, file.name);
+            });
+        } else {
+          blobDownload(blob, file.name);
+        }
+      });
+
+      /* ═══════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════ */
+      function dataURLtoBlob(dataURL) {
+        const [head, body] = dataURL.split(",");
+        const mime = head.match(/:(.*?);/)[1];
+        const raw = atob(body);
+        const arr = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+        return new Blob([arr], { type: mime });
+      }
+
+      function blobDownload(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 500);
+      }
+    </script>
+  </body>
+</html>
