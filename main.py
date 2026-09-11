@@ -169,17 +169,18 @@ def launch_browser(url: str = "http://127.0.0.1:8000"):
 if __name__ == "__main__":
     import uvicorn
 
-    host = "127.0.0.1"
-    port = 8000
-    server_url = f"http://{host}:{port}"
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "8000"))
+    local_url = f"http://127.0.0.1:{port}"
 
-    # Launch browser in a background daemon thread
-    threading.Thread(target=launch_browser, args=(server_url,), daemon=True).start()
+    # Launch browser on localhost in a background daemon thread
+    threading.Thread(target=launch_browser, args=(local_url,), daemon=True).start()
 
     print("\n" + "=" * 65)
     print("   SCALP IMAGE VALIDATOR (FastAPI Backend & Testing UI)   ")
-    print(f"   -> Web Frontend : {server_url}")
-    print("   -> Status       : Auto-opening frontend in your browser...")
+    print(f"   -> Local Access   : http://127.0.0.1:{port}")
+    print(f"   -> Network Access : http://0.0.0.0:{port} (Use your LAN IP on phone)")
+    print(f"   -> Mobile Camera  : Requires HTTPS (e.g. ngrok / Cloudflare Tunnel)")
     print("=" * 65 + "\n")
 
     # Start the FastAPI server via Uvicorn

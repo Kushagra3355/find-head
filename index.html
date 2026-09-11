@@ -217,19 +217,46 @@
       position: relative;
     }
 
+    .camera-overlay-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #f8fafc;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 5;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     #cameraVideo {
       width: 100%;
-      max-height: 360px;
+      max-height: 380px;
       object-fit: cover;
       display: block;
+      background: #000;
+      transition: transform 0.2s ease;
+    }
+
+    #cameraVideo.mirrored {
+      transform: scaleX(-1);
     }
 
     .camera-actions {
       padding: 12px;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       justify-content: center;
+      align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     /* Controls Bar */
@@ -525,10 +552,18 @@
 
       <!-- Live Camera Stream container -->
       <div id="cameraContainer">
-        <video id="cameraVideo" autoplay playsinline></video>
+        <div class="camera-overlay-badge" id="cameraFacingBadge">📷 Rear Camera</div>
+        <video id="cameraVideo" autoplay playsinline muted></video>
         <div class="camera-actions">
-          <button class="btn btn-primary" onclick="captureCameraSnapshot()">📸 Capture & Validate</button>
-          <button class="btn btn-secondary" onclick="stopCamera()">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="cameraSwitchBtn" onclick="switchCamera()">
+            🔄 Switch to Front
+          </button>
+          <button type="button" class="btn btn-primary" onclick="captureCameraSnapshot()">
+            📸 Capture & Validate
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="stopCamera()">
+            Cancel
+          </button>
         </div>
       </div>
 
@@ -759,7 +794,9 @@
       stopCamera();
     }
 
-    // Camera Support
+    // Camera Support (Front / Rear Switching)
+    let currentFacingMode = 'environment'; // 'environment' (rear) or 'user' (front)
+
     async function toggleCamera() {
       const container = document.getElementById('cameraContainer');
       if (container.style.display === 'block') {
@@ -767,25 +804,103 @@
         return;
       }
 
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        });
-        const video = document.getElementById('cameraVideo');
-        video.srcObject = currentStream;
-        container.style.display = 'block';
-        document.getElementById('cameraToggleBtn').innerText = '✕ Close Camera';
-      } catch (err) {
-        console.error('Camera access denied or unavailable:', err);
-        alert('Could not access camera. Please allow camera permissions or upload an image file.');
+      // Check if mediaDevices API is available (requires HTTPS or localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert(
+          'Camera API is not supported or is blocked by your browser.\n\n' +
+          'NOTE FOR MOBILE BROWSERS: Mobile browsers (Safari/Chrome) require an HTTPS secure connection to allow camera access. If you are accessing via HTTP (e.g. http://192.168.x.x), the camera will not open unless HTTPS or an SSL tunnel (like Cloudflare Tunnel or ngrok) is used.'
+        );
+        return;
       }
+
+      await startCameraStream(currentFacingMode);
+    }
+
+    async function startCameraStream(facing) {
+      const container = document.getElementById('cameraContainer');
+      const video = document.getElementById('cameraVideo');
+      const switchBtn = document.getElementById('cameraSwitchBtn');
+      const badge = document.getElementById('cameraFacingBadge');
+      const toggleBtn = document.getElementById('cameraToggleBtn');
+
+      // Stop existing tracks before requesting a new stream
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+      }
+
+      currentFacingMode = facing;
+      const isFront = (facing === 'user');
+
+      try {
+        let stream;
+        try {
+          // Attempt exact facingMode first
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { exact: facing },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+        } catch (exactErr) {
+          // Fallback to ideal facingMode if exact is unsupported
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: facing },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+        }
+
+        currentStream = stream;
+        video.srcObject = stream;
+        await video.play();
+
+        // Mirror preview for front camera so user gets a natural mirror perspective
+        if (isFront) {
+          video.classList.add('mirrored');
+        } else {
+          video.classList.remove('mirrored');
+        }
+
+        // Update badge and switch button label
+        if (badge) {
+          badge.innerHTML = isFront ? '🤳 Front Camera (Selfie)' : '📷 Rear Camera';
+        }
+        if (switchBtn) {
+          switchBtn.innerHTML = isFront ? '🔄 Switch to Rear' : '🔄 Switch to Front';
+        }
+
+        container.style.display = 'block';
+        toggleBtn.innerText = '✕ Close Camera';
+      } catch (err) {
+        console.error('Camera access error:', err);
+        alert(
+          'Could not access ' + (isFront ? 'front' : 'rear') + ' camera (' + (err.name || 'Error') + ': ' + (err.message || 'unknown') + ').\n\n' +
+          'Please ensure camera permissions are allowed in your browser settings and the site is served over HTTPS.'
+        );
+        stopCamera();
+      }
+    }
+
+    async function switchCamera() {
+      const nextFacing = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      await startCameraStream(nextFacing);
     }
 
     function stopCamera() {
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
+      }
+      const video = document.getElementById('cameraVideo');
+      if (video) {
+        video.srcObject = null;
+        video.classList.remove('mirrored');
       }
       document.getElementById('cameraContainer').style.display = 'none';
       document.getElementById('cameraToggleBtn').innerText = '📹 Use Camera';
@@ -797,6 +912,8 @@
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
       const ctx = canvas.getContext('2d');
+
+      // Draw sensor image
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob((blob) => {
