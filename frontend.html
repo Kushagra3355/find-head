@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Norwood Classifier API Test</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+        color: #333;
+      }
+      .card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+      }
+      h2 {
+        margin-top: 0;
+        color: #1e293b;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .upload-btn {
+        background: #2563eb;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        display: inline-block;
+        transition: 0.2s;
+      }
+      .upload-btn:hover {
+        background: #1d4ed8;
+      }
+      #preview {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 20px;
+        display: none;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        display: none;
+        text-align: left;
+      }
+      .stage {
+        font-size: 24px;
+        font-weight: bold;
+        color: #059669;
+      }
+      .loader {
+        display: none;
+        margin-top: 15px;
+        font-weight: bold;
+        color: #2563eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Norwood Grader</h2>
+      <p style="font-size: 14px; color: #64748b; margin-bottom: 20px">
+        Images are compressed to WebP locally before upload.
+      </p>
+
+      <label class="upload-btn">
+        Upload Image
+        <input type="file" id="fileInput" accept="image/*" />
+      </label>
+
+      <img id="preview" alt="Preview" />
+      <div id="loader" class="loader">Compressing & Analyzing...</div>
+
+      <div id="result">
+        <div class="stage" id="resStage"></div>
+        <div style="margin-top: 8px">
+          Confidence: <strong id="resConf"></strong>
+        </div>
+        <details style="margin-top: 10px; font-size: 13px; color: #64748b">
+          <summary>View All Probabilities</summary>
+          <pre
+            id="resAll"
+            style="white-space: pre-wrap; font-family: monospace"
+          ></pre>
+        </details>
+      </div>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const preview = document.getElementById("preview");
+      const resultDiv = document.getElementById("result");
+      const loader = document.getElementById("loader");
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Reset UI
+        resultDiv.style.display = "none";
+        loader.style.display = "block";
+        preview.style.display = "block";
+        preview.src = URL.createObjectURL(file);
+
+        // Read and compress image
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            // 1. Setup Canvas for resizing/compression
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+
+            // Max dimension 800px to save bandwidth
+            const MAX_SIZE = 800;
+            if (width > height && width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            } else if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 2. Export as 80% quality WebP
+            canvas.toBlob(
+              (blob) => {
+                uploadToAPI(blob);
+              },
+              "image/webp",
+              0.8,
+            );
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      async function uploadToAPI(blob) {
+        const formData = new FormData();
+        formData.append("file", blob, "compressed.webp");
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          loader.style.display = "none";
+          resultDiv.style.display = "block";
+
+          document.getElementById("resStage").innerText = data.norwood_stage;
+          document.getElementById("resConf").innerText =
+            data.confidence_percentage + "%";
+          document.getElementById("resAll").innerText = JSON.stringify(
+            data.all_probabilities,
+            null,
+            2,
+          );
+        } catch (err) {
+          loader.style.display = "none";
+          alert("Error connecting to server.");
+        }
+      }
+    </script>
+  </body>
+</html>
