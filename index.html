@@ -206,6 +206,7 @@
         bottom: 0;
         width: 100vw;
         height: 100vh;
+        height: 100dvh; /* FIX: Prevents mobile browser bar from cutting off buttons */
         background: #000;
         z-index: 9999;
         color: #fff;
@@ -240,8 +241,8 @@
         z-index: 4;
       }
       .scanner-box {
-        width: 65%;
-        max-width: 350px;
+        width: 80%; /* FIX: Increased from 65% for mobile */
+        max-width: 400px;
         aspect-ratio: 1 / 1;
         border: 3px dashed rgba(255, 255, 255, 0.8);
         border-radius: 16px;
@@ -323,7 +324,7 @@
         left: 0;
         right: 0;
         z-index: 10;
-        padding: 0 20px calc(env(safe-area-inset-bottom, 20px) + 20px);
+        padding: 0 16px calc(env(safe-area-inset-bottom, 16px) + 16px);
         background: linear-gradient(
           0deg,
           rgba(0, 0, 0, 0.85) 40%,
@@ -332,8 +333,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 14px;
-        padding-top: 40px;
+        gap: 10px;
+        padding-top: 24px;
       }
 
       .status-row {
@@ -388,7 +389,7 @@
         gap: 4px;
       }
       .guide-main {
-        font-size: 16px;
+        font-size: 15px; /* FIX: slightly smaller to prevent text wrapping */
         font-weight: 700;
         transition: color 0.15s;
       }
@@ -409,7 +410,7 @@
         height: 6px;
         background: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
-        margin-top: 10px;
+        margin-top: 4px;
         overflow: hidden;
       }
       .hold-progress-bar {
@@ -423,20 +424,24 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 12px;
-        margin-top: 10px;
+        gap: 10px;
+        margin-top: 8px;
         width: 100%;
+        flex-wrap: wrap; /* FIX: Allows buttons to stack elegantly on very thin screens */
       }
       .cam-btn {
-        padding: 10px 20px;
+        padding: 8px 16px;
         border-radius: 20px;
         border: none;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         background: rgba(255, 255, 255, 0.2);
         color: white;
         backdrop-filter: blur(5px);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
       }
 
       /* Results Section */
@@ -585,60 +590,6 @@
         font-size: 12px;
         color: var(--text-muted);
       }
-      /* RAW JSON VIEWER */
-      .raw-json-section {
-        margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px solid var(--border-color);
-      }
-      .raw-json-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-      }
-      .raw-json-title {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .btn-copy-json {
-        background: #f1f5f9;
-        color: var(--text-muted);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 4px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .btn-copy-json:hover {
-        background: #e2e8f0;
-        color: var(--text-main);
-      }
-      .raw-json-pre {
-        background: #0f172a;
-        color: #38bdf8;
-        padding: 14px 16px;
-        border-radius: 8px;
-        font-size: 12.5px;
-        line-height: 1.55;
-        overflow-x: auto;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        margin: 0;
-        border: 1px solid #1e293b;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-        max-height: 260px;
-      }
 
       #fileInput {
         display: none;
@@ -689,36 +640,8 @@
             </div>
             <div class="gauge" id="gauge">
               <svg viewBox="0 0 56 56">
-                <circle
-                  cx="28"
-                  cy="28"
-                  r="23"
-                  fill="none"
-                  stroke="rgba(255,255,255,.2)"
-                  stroke-width="4"
-                  stroke-dasharray="144.51"
-                  stroke-dashoffset="36.13"
-                  transform="rotate(135 28 28)"
-                  stroke-linecap="round"
-                />
-                <circle
-                  id="gaugeArc"
-                  cx="28"
-                  cy="28"
-                  r="23"
-                  fill="none"
-                  stroke="#ff6b6b"
-                  stroke-width="4"
-                  stroke-dasharray="144.51"
-                  stroke-dashoffset="144.51"
-                  transform="rotate(135 28 28)"
-                  stroke-linecap="round"
-                  style="
-                    transition:
-                      stroke-dashoffset 0.12s ease-out,
-                      stroke 0.2s;
-                  "
-                />
+                <circle cx="28" cy="28" r="23" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-dasharray="144.51" stroke-dashoffset="36.13" transform="rotate(135 28 28)" stroke-linecap="round" />
+                <circle id="gaugeArc" cx="28" cy="28" r="23" fill="none" stroke="#ff6b6b" stroke-width="4" stroke-dasharray="144.51" stroke-dashoffset="144.51" transform="rotate(135 28 28)" stroke-linecap="round" style="transition: stroke-dashoffset 0.12s ease-out, stroke 0.2s;" />
               </svg>
               <div class="gauge-val" id="gaugeVal">—°</div>
             </div>
@@ -755,8 +678,14 @@
 
             <div class="camera-actions">
               <button class="cam-btn" onclick="switchCamera()">
-                🔄 Switch Cam
+                🔄 Flip Cam
               </button>
+              
+              <!-- FIX: New Lens Switcher Button -->
+              <button class="cam-btn" id="lensBtn" style="display:none;" onclick="toggleLens()">
+                🔍 Switch Lens
+              </button>
+              
               <button class="cam-btn" onclick="stopCamera()">✕ Cancel</button>
             </div>
           </div>
@@ -790,11 +719,7 @@
             <div id="confidenceScore" class="meter-score approved">99.9%</div>
           </div>
           <div class="progress-bar-wrapper">
-            <div
-              id="progressBarFill"
-              class="progress-bar-fill approved"
-              style="width: 90%"
-            ></div>
+            <div id="progressBarFill" class="progress-bar-fill approved" style="width: 90%"></div>
           </div>
         </div>
         <div class="details-grid">
@@ -821,15 +746,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Raw JSON Response -->
-        <div class="raw-json-section">
-          <div class="raw-json-header">
-            <span class="raw-json-title">{ } Raw JSON Response</span>
-            <button class="btn-copy-json" onclick="copyRawJson()" id="copyJsonBtn">📋 Copy</button>
-          </div>
-          <pre class="raw-json-pre" id="rawJsonResponse">{}</pre>
-        </div>
       </div>
     </main>
 
@@ -846,18 +762,15 @@
       sampleCanvas.height = 224;
       const sampleCtx = sampleCanvas.getContext("2d");
 
-      let currentStream = null,
-        isScanning = false,
-        steadyCount = 0;
+      let currentStream = null, isScanning = false, steadyCount = 0;
       const REQUIRED_STEADY_FRAMES = 8;
 
       // --- GYRO CONFIGURATION ---
-      let beta = 0,
-        gamma = 0;
+      let beta = 0, gamma = 0;
       let TARGET_BETA = 45;
       const TARGET_GAMMA = 0;
-      const BETA_TOL = 5; // +/- 5 degrees tilt tolerance
-      const GAMMA_TOL = 5; // +/- 5 degrees roll tolerance
+      const BETA_TOL = 5; 
+      const GAMMA_TOL = 5; 
       let lastValidBeta = 0;
       let lastValidGamma = 0;
 
@@ -865,7 +778,7 @@
         document.getElementById("thresholdDisplay").innerText = `${val}%`;
       }
 
-      // File Upload Handlers (Skip Gyro)
+      // File Upload Handlers
       fileInput.addEventListener("change", (e) => {
         if (e.target.files[0]) handleFile(e.target.files[0]);
       });
@@ -889,40 +802,25 @@
           const apiPath =
             window.location.hostname === "localhost" ||
             window.location.hostname === "127.0.0.1"
-              ? `http://localhost:5003/validate?threshold=${thresholdVal}`
+              ? `http://localhost:8000/validate?threshold=${thresholdVal}`
               : `/validate?threshold=${thresholdVal}`;
           const res = await fetch(apiPath, { method: "POST", body: formData });
           renderResults(await res.json());
         } catch (err) {
-          document.getElementById("diagnosticMessage").innerText =
-            "Network error.";
+          document.getElementById("diagnosticMessage").innerText = "Network error.";
         }
       }
 
       function renderResults(data) {
         const isApproved = data.is_valid;
-        document.getElementById("verdictBadge").className =
-          `verdict-badge ${isApproved ? "approved" : "rejected"}`;
-        document.getElementById("verdictBadge").innerHTML = isApproved
-          ? "✓ APPROVED"
-          : "✕ REJECTED";
-        document.getElementById("confidenceScore").className =
-          `meter-score ${isApproved ? "approved" : "rejected"}`;
-        document.getElementById("confidenceScore").innerText =
-          `${data.confidence || 0}%`;
-        document.getElementById("progressBarFill").className =
-          `progress-bar-fill ${isApproved ? "approved" : "rejected"}`;
-        document.getElementById("progressBarFill").style.width =
-          `${Math.min(100, Math.max(0, data.confidence))}%`;
+        document.getElementById("verdictBadge").className = `verdict-badge ${isApproved ? "approved" : "rejected"}`;
+        document.getElementById("verdictBadge").innerHTML = isApproved ? "✓ APPROVED" : "✕ REJECTED";
+        document.getElementById("confidenceScore").className = `meter-score ${isApproved ? "approved" : "rejected"}`;
+        document.getElementById("confidenceScore").innerText = `${data.confidence || 0}%`;
+        document.getElementById("progressBarFill").className = `progress-bar-fill ${isApproved ? "approved" : "rejected"}`;
+        document.getElementById("progressBarFill").style.width = `${Math.min(100, Math.max(0, data.confidence))}%`;
         document.getElementById("diagnosticMessage").innerText = data.message;
-        document.getElementById("metaThreshold").innerText =
-          `${thresholdSlider.value}%`;
-
-        // Render Raw JSON
-        const rawJsonEl = document.getElementById("rawJsonResponse");
-        if (rawJsonEl) {
-          rawJsonEl.textContent = JSON.stringify(data, null, 2);
-        }
+        document.getElementById("metaThreshold").innerText = `${thresholdSlider.value}%`;
       }
 
       function resetTest() {
@@ -930,41 +828,16 @@
         resultCard.style.display = "none";
         stopCamera();
         window.scrollTo(0, 0);
-        const rawJsonEl = document.getElementById("rawJsonResponse");
-        if (rawJsonEl) {
-          rawJsonEl.textContent = "{}";
-        }
       }
 
-      function copyRawJson() {
-        const rawJsonEl = document.getElementById("rawJsonResponse");
-        if (rawJsonEl && rawJsonEl.textContent) {
-          navigator.clipboard.writeText(rawJsonEl.textContent).then(() => {
-            const btn = document.getElementById("copyJsonBtn");
-            if (btn) {
-              btn.textContent = "✓ Copied!";
-              setTimeout(() => {
-                btn.textContent = "📋 Copy";
-              }, 2000);
-            }
-          });
-        }
-      }
-
-      // --- FULL SCREEN CAMERA & GYRO LOGIC ---
+      // --- CAMERA, LENS, & GYRO LOGIC ---
       let currentFacingMode = "environment";
+      let currentDeviceId = null; // Stores the actively running camera hardware ID
 
       async function toggleCamera() {
-        if (
-          document.getElementById("cameraContainer").style.display === "block"
-        )
-          return stopCamera();
+        if (document.getElementById("cameraContainer").style.display === "block") return stopCamera();
 
-        // 1. Request iOS Gyro Permissions if needed
-        if (
-          typeof DeviceOrientationEvent !== "undefined" &&
-          typeof DeviceOrientationEvent.requestPermission === "function"
-        ) {
+        if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
           try {
             const perm = await DeviceOrientationEvent.requestPermission();
             if (perm !== "granted") throw new Error("Permission denied");
@@ -973,8 +846,6 @@
             return;
           }
         }
-
-        // 2. Start Gyro Listener
         window.addEventListener("deviceorientation", handleOrientation);
         await startCameraStream(currentFacingMode);
       }
@@ -984,30 +855,46 @@
         gamma = e.gamma || 0;
       }
 
-      async function startCameraStream(facing) {
-        if (currentStream)
-          currentStream.getTracks().forEach((track) => track.stop());
+      // FIX: Added 'deviceId' parameter to directly request a specific lens
+      async function startCameraStream(facing, deviceId = null) {
+        if (currentStream) currentStream.getTracks().forEach((track) => track.stop());
+        
         currentFacingMode = facing;
         const isFront = facing === "user";
-        TARGET_BETA = isFront ? 90 : 45; // Dynamically adjust target angle
+        TARGET_BETA = isFront ? 90 : 45; 
+
+        // Set video constraints
+        let constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+        if (deviceId && !isFront) {
+            constraints.video.deviceId = { exact: deviceId };
+        } else {
+            constraints.video.facingMode = { ideal: facing };
+        }
 
         try {
-          let stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { ideal: facing },
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-            audio: false,
-          });
+          let stream = await navigator.mediaDevices.getUserMedia(constraints);
           currentStream = stream;
+          
+          // Save the actual device ID we are using
+          const track = stream.getVideoTracks()[0];
+          currentDeviceId = track.getSettings().deviceId;
+
           const video = document.getElementById("cameraVideo");
           video.srcObject = stream;
           await video.play();
 
           video.classList.toggle("mirrored", isFront);
-          document.getElementById("subtitleText").innerText =
-            `Target: ${TARGET_BETA}° tilt · ${isFront ? "Front cam" : "Rear cam"}`;
+          document.getElementById("subtitleText").innerText = `Target: ${TARGET_BETA}° tilt · ${isFront ? "Front cam" : "Rear cam"}`;
+          
+          // Check if multiple rear lenses exist to show the Lens Switch button
+          const allDevices = await navigator.mediaDevices.enumerateDevices();
+          const backCameras = allDevices.filter(d => d.kind === 'videoinput' && (!d.label || d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment')));
+          
+          if (!isFront && backCameras.length > 1) {
+              document.getElementById("lensBtn").style.display = "inline-flex";
+          } else {
+              document.getElementById("lensBtn").style.display = "none";
+          }
 
           document.getElementById("cameraContainer").style.display = "block";
           document.body.style.overflow = "hidden";
@@ -1025,11 +912,32 @@
         }
       }
 
-      // THE TWO-TIER INFERENCE LOOP
+      // FIX: New function to cycle through different rear camera lenses
+      async function toggleLens() {
+          if (currentFacingMode !== 'environment') return;
+          try {
+              const allDevices = await navigator.mediaDevices.enumerateDevices();
+              let backCameras = allDevices.filter(d => d.kind === 'videoinput' && (!d.label || d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment')));
+              
+              // Fallback if labels are empty
+              if (backCameras.length === 0) backCameras = allDevices.filter(d => d.kind === 'videoinput');
+              
+              if (backCameras.length <= 1) return alert("No additional rear lenses detected.");
+
+              // Find current index and cycle to the next one
+              let idx = backCameras.findIndex(d => d.deviceId === currentDeviceId);
+              idx = (idx + 1) % backCameras.length; 
+              
+              // Restart stream with specific device
+              await startCameraStream('environment', backCameras[idx].deviceId);
+          } catch(e) { console.error("Lens switch error:", e); }
+      }
+
       async function runInferenceLoop() {
         const video = document.getElementById("cameraVideo");
         while (isScanning) {
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            
             // --- TIER 1: GYROSCOPE CHECK ---
             const isFront = currentFacingMode === "user";
             const betaErr = Math.abs(beta - TARGET_BETA);
@@ -1041,73 +949,48 @@
             updateGyroHUD(tiltOk, rollOk, betaErr, isFront);
 
             if (!gyroOk) {
-              // Gyro failed: Reset AI hold counter and skip API call to save bandwidth
               steadyCount = 0;
               document.getElementById("liveHoldProgress").style.width = "0%";
               videoWrapper.classList.remove("detected", "gyro-ok");
             } else {
-              // Gyro Passed: Visually show it's ready for AI
               videoWrapper.classList.add("gyro-ok");
-              document.getElementById("guideMsg").textContent =
-                "Angle Perfect. Analyzing Scalp...";
+              document.getElementById("guideMsg").textContent = "Angle Perfect. Analyzing Scalp...";
               document.getElementById("guideMsg").className = "guide-main ok";
 
               // --- TIER 2: AI VALIDATION CHECK ---
               const vw = video.videoWidth;
               const vh = video.videoHeight;
-              const cropSize = Math.min(vw, vh) * 0.65;
+              
+              // FIX: Increased mathematical crop size from 65% to 80% to match visual box
+              const cropSize = Math.min(vw, vh) * 0.80;
               const sx = (vw - cropSize) / 2;
               const sy = (vh - cropSize) / 2;
 
-              sampleCtx.drawImage(
-                video,
-                sx,
-                sy,
-                cropSize,
-                cropSize,
-                0,
-                0,
-                224,
-                224,
-              );
-              const blob = await new Promise((res) =>
-                sampleCanvas.toBlob(res, "image/webp", 0.8),
-              );
+              sampleCtx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, 224, 224);
+              const blob = await new Promise((res) => sampleCanvas.toBlob(res, "image/webp", 0.8));
               const formData = new FormData();
               formData.append("file", blob, "frame.webp");
               const thresholdVal = parseFloat(thresholdSlider.value) / 100.0;
 
               try {
-                const apiPath =
-                  window.location.hostname === "localhost" ||
-                  window.location.hostname === "127.0.0.1"
-                    ? `http://localhost:5003/validate?threshold=${thresholdVal}`
+                const apiPath = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+                    ? `http://localhost:8000/validate?threshold=${thresholdVal}`
                     : `/validate?threshold=${thresholdVal}`;
-                const res = await fetch(apiPath, {
-                  method: "POST",
-                  body: formData,
-                });
+                const res = await fetch(apiPath, { method: "POST", body: formData });
                 const data = await res.json();
 
-                if (
-                  data.is_valid ||
-                  data.confidence >= parseFloat(thresholdSlider.value)
-                ) {
+                if (data.is_valid || data.confidence >= parseFloat(thresholdSlider.value)) {
                   steadyCount++;
                   videoWrapper.classList.add("detected");
-                  document.getElementById("guideMsg").textContent =
-                    `Hold still... (AI: ${Math.round(data.confidence)}%)`;
+                  document.getElementById("guideMsg").textContent = `Hold still... (AI: ${Math.round(data.confidence)}%)`;
                 } else {
                   steadyCount = 0;
                   videoWrapper.classList.remove("detected");
-                  document.getElementById("guideMsg").textContent =
-                    "Scalp not detected in box.";
-                  document.getElementById("guideMsg").className =
-                    "guide-main bad";
+                  document.getElementById("guideMsg").textContent = "Scalp not detected in box.";
+                  document.getElementById("guideMsg").className = "guide-main bad";
                 }
 
-                document.getElementById("liveHoldProgress").style.width =
-                  `${Math.min((steadyCount / REQUIRED_STEADY_FRAMES) * 100, 100)}%`;
+                document.getElementById("liveHoldProgress").style.width = `${Math.min((steadyCount / REQUIRED_STEADY_FRAMES) * 100, 100)}%`;
 
                 if (steadyCount >= REQUIRED_STEADY_FRAMES) {
                   isScanning = false;
@@ -1124,70 +1007,42 @@
       }
 
       function updateGyroHUD(tiltOk, rollOk, betaErr, isFront) {
-        // Update Arc
         const betaClamped = Math.max(0, Math.min(90, beta));
         const offset = 144.51 * (1 - betaClamped / 90);
-        document
-          .getElementById("gaugeArc")
-          .setAttribute("stroke-dashoffset", offset.toFixed(2));
-        document
-          .getElementById("gaugeArc")
-          .setAttribute("stroke", tiltOk ? "#00e68a" : "#ff6b6b");
+        document.getElementById("gaugeArc").setAttribute("stroke-dashoffset", offset.toFixed(2));
+        document.getElementById("gaugeArc").setAttribute("stroke", tiltOk ? "#00e68a" : "#ff6b6b");
 
         const gaugeVal = document.getElementById("gaugeVal");
         gaugeVal.textContent = Math.round(beta) + "°";
         gaugeVal.style.color = tiltOk ? "#00e68a" : "#fff";
 
-        // Update Chips
-        document.getElementById("pipAngle").className =
-          "pip " + (tiltOk ? "on" : "off");
-        document.getElementById("chipAngle").className =
-          "chip " + (tiltOk ? "pass" : "fail");
-        document.getElementById("lblAngle").textContent = tiltOk
-          ? Math.round(beta) + "° ✓"
-          : Math.round(beta) + "°";
+        document.getElementById("pipAngle").className = "pip " + (tiltOk ? "on" : "off");
+        document.getElementById("chipAngle").className = "chip " + (tiltOk ? "pass" : "fail");
+        document.getElementById("lblAngle").textContent = tiltOk ? Math.round(beta) + "° ✓" : Math.round(beta) + "°";
 
-        document.getElementById("pipRoll").className =
-          "pip " + (rollOk ? "on" : "off");
-        document.getElementById("chipRoll").className =
-          "chip " + (rollOk ? "pass" : "fail");
-        document.getElementById("lblRoll").textContent = rollOk
-          ? "Level ✓"
-          : "Tilted";
+        document.getElementById("pipRoll").className = "pip " + (rollOk ? "on" : "off");
+        document.getElementById("chipRoll").className = "chip " + (rollOk ? "pass" : "fail");
+        document.getElementById("lblRoll").textContent = rollOk ? "Level ✓" : "Tilted";
 
-        // Guide Hints
         if (!tiltOk || !rollOk) {
           const hints = [];
-          if (!tiltOk)
-            hints.push(
-              beta < TARGET_BETA
-                ? "Tilt phone Forward ↓"
-                : "Tilt phone Upright ↑",
-            );
+          if (!tiltOk) hints.push(beta < TARGET_BETA ? "Tilt phone Forward ↓" : "Tilt phone Upright ↑");
 
           if (!rollOk) {
-            // Reverse direction hints if front camera is active
             if (isFront) {
-              hints.push(
-                gamma < TARGET_GAMMA ? "Rotate Right ↷" : "Rotate Left ↶",
-              );
+              hints.push(gamma < TARGET_GAMMA ? "Rotate Right ↷" : "Rotate Left ↶");
             } else {
-              hints.push(
-                gamma < TARGET_GAMMA ? "Rotate Left ↶" : "Rotate Right ↷",
-              );
+              hints.push(gamma < TARGET_GAMMA ? "Rotate Left ↶" : "Rotate Right ↷");
             }
           }
           document.getElementById("guideMsg").textContent = hints.join("  ·  ");
           document.getElementById("guideMsg").className = "guide-main bad";
-          document.getElementById("guideSub").textContent =
-            `Target: ${TARGET_BETA}° tilt (±${BETA_TOL}°), level hold`;
+          document.getElementById("guideSub").textContent = `Target: ${TARGET_BETA}° tilt (±${BETA_TOL}°), level hold`;
         }
       }
 
       async function switchCamera() {
-        await startCameraStream(
-          currentFacingMode === "environment" ? "user" : "environment",
-        );
+        await startCameraStream(currentFacingMode === "environment" ? "user" : "environment");
       }
 
       function stopCamera() {
@@ -1197,8 +1052,7 @@
           currentStream.getTracks().forEach((track) => track.stop());
           currentStream = null;
         }
-        if (document.getElementById("cameraVideo"))
-          document.getElementById("cameraVideo").srcObject = null;
+        if (document.getElementById("cameraVideo")) document.getElementById("cameraVideo").srcObject = null;
         document.getElementById("cameraContainer").style.display = "none";
         document.body.style.overflow = "auto";
       }
@@ -1210,7 +1064,9 @@
 
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        const cropSize = Math.min(vw, vh) * 0.65;
+        
+        // FIX: Ensure final high-res snapshot also matches new 80% size
+        const cropSize = Math.min(vw, vh) * 0.80; 
         const sx = (vw - cropSize) / 2;
         const sy = (vh - cropSize) / 2;
 
@@ -1221,26 +1077,14 @@
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(
-          video,
-          sx,
-          sy,
-          cropSize,
-          cropSize,
-          0,
-          0,
-          cropSize,
-          cropSize,
-        );
+        ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, cropSize, cropSize);
 
         canvas.toBlob(
           (blob) => {
             stopCamera();
             previewImage.src = URL.createObjectURL(blob);
-            document.getElementById("metaPitch").innerText =
-              `${lastValidBeta}°`;
-            document.getElementById("metaRoll").innerText =
-              `${lastValidGamma}°`;
+            document.getElementById("metaPitch").innerText = `${lastValidBeta}°`;
+            document.getElementById("metaRoll").innerText = `${lastValidGamma}°`;
             uploadImageBlob(blob);
           },
           "image/jpeg",
