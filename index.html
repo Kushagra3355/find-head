@@ -251,7 +251,7 @@
         border-radius: 16px;
         box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.75);
         transition: all 0.2s ease;
-        margin-bottom: 12vh; /* SHIFTS THE BOX UP TO BE VISUALLY CENTERED */
+        margin-bottom: 12vh;
       }
       .video-wrapper.gyro-ok .scanner-box {
         border-color: #38bdf8;
@@ -553,7 +553,6 @@
         }
       }
 
-      /* PREVIEW BOX - FIXED TO DISPLAY FULL UN-CROPPED SQUARE */
       .preview-box {
         width: 100%;
         aspect-ratio: 1 / 1;
@@ -827,7 +826,7 @@
                 Gyro Roll: <strong id="metaRoll">-</strong>
               </div>
             </div>
-            <!-- DOWNLOAD BUTTON ADDED HERE -->
+
             <div
               style="
                 margin-top: 16px;
@@ -879,13 +878,13 @@
         steadyCount = 0;
       const REQUIRED_STEADY_FRAMES = 8;
 
-      // --- GYRO CONFIGURATION & NEW TOLERANCES ---
+      // --- GYRO CONFIGURATION (DYNAMIC TOLERANCES) ---
       let beta = 0,
         gamma = 0;
       let TARGET_BETA = 45;
       const TARGET_GAMMA = 0;
-      const BETA_TOL = 15;
-      const GAMMA_TOL = 7;
+      let BETA_TOL = 3;
+      let GAMMA_TOL = 3;
       let lastValidBeta = 0;
       let lastValidGamma = 0;
 
@@ -974,7 +973,6 @@
         }
       }
 
-      // NEW: Download Image Function
       function downloadImage() {
         const imgSrc = document.getElementById("previewImage").src;
         if (!imgSrc) return;
@@ -1021,7 +1019,17 @@
 
         currentFacingMode = facing;
         const isFront = facing === "user";
-        TARGET_BETA = isFront ? 180 : 45; // 180 DEGREE TARGET FOR FRONT CAM
+
+        // --- DYNAMIC TARGETS AND TOLERANCES BASED ON CAMERA ---
+        if (isFront) {
+          TARGET_BETA = 170;
+          BETA_TOL = 7;
+          GAMMA_TOL = 5;
+        } else {
+          TARGET_BETA = 45;
+          BETA_TOL = 3;
+          GAMMA_TOL = 3;
+        }
 
         let constraints = {
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -1104,11 +1112,10 @@
         const video = document.getElementById("cameraVideo");
         while (isScanning) {
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            // TIER 1: GYRO WITH 180 DEGREE WRAP-AROUND LOGIC
             const isFront = currentFacingMode === "user";
 
             let betaErr = Math.abs(beta - TARGET_BETA);
-            if (betaErr > 180) betaErr = 360 - betaErr; // Handles jump from +180 to -180
+            if (betaErr > 180) betaErr = 360 - betaErr;
 
             const gammaErr = Math.abs(gamma - TARGET_GAMMA);
             const tiltOk = betaErr <= BETA_TOL;
@@ -1127,7 +1134,6 @@
                 "Angle Perfect. Analyzing Scalp...";
               document.getElementById("guideMsg").className = "guide-main ok";
 
-              // TIER 2: AI VALIDATION CHECK
               const vw = video.videoWidth;
               const vh = video.videoHeight;
               const cropSize = Math.min(vw, vh) * 0.8;
