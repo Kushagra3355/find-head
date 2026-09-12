@@ -1,0 +1,14 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+notebooks/
+dataset/
+datasets/
+*.zip
+.vscode/
+.idea/

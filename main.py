@@ -87,7 +87,7 @@ async def validate_image(file: UploadFile = File(...), threshold: Optional[float
         )
     }
 
-def launch_browser(url: str = "http://127.0.0.1:8000"):
+def launch_browser(url: str = "http://127.0.0.1:5003"):
     for _ in range(50):
         time.sleep(0.4)
         try:
@@ -99,6 +99,6 @@ def launch_browser(url: str = "http://127.0.0.1:8000"):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", "8000"))
+    port = int(os.environ.get("PORT", "5003"))
     threading.Thread(target=launch_browser, args=(f"http://127.0.0.1:{port}",), daemon=True).start()
     uvicorn.run(app, host="0.0.0.0", port=port)
