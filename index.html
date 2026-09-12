@@ -553,6 +553,7 @@
         }
       }
 
+      /* PREVIEW BOX SHOWS FULL IMAGE */
       .preview-box {
         width: 100%;
         aspect-ratio: 1 / 1;
@@ -568,7 +569,7 @@
         width: 100%;
         height: 100%;
         object-fit: contain;
-      }
+      } /* 'contain' fits full image in square */
 
       .diagnostic-box {
         display: flex;
@@ -692,6 +693,8 @@
                 Target: 45° tilt · Rear cam
               </div>
             </div>
+
+            <!-- Gyro Gauge (Hidden for front cam) -->
             <div class="gauge" id="gauge">
               <svg viewBox="0 0 56 56">
                 <circle
@@ -735,7 +738,8 @@
           </div>
 
           <div class="bottom-hud">
-            <div class="status-row">
+            <!-- Angle Status (Hidden for front cam) -->
+            <div class="status-row" id="statusRow">
               <div class="chip fail" id="chipAngle">
                 <div class="pip off" id="pipAngle"></div>
                 <span id="lblAngle">Angle</span>
@@ -878,7 +882,7 @@
         steadyCount = 0;
       const REQUIRED_STEADY_FRAMES = 8;
 
-      // --- GYRO CONFIGURATION (DYNAMIC TOLERANCES) ---
+      // --- GYRO CONFIGURATION ---
       let beta = 0,
         gamma = 0;
       let TARGET_BETA = 45;
@@ -1020,15 +1024,20 @@
         currentFacingMode = facing;
         const isFront = facing === "user";
 
-        // --- DYNAMIC TARGETS AND TOLERANCES BASED ON CAMERA ---
+        // --- HIDE GYRO HUD FOR FRONT CAMERA ---
         if (isFront) {
-          TARGET_BETA = 170;
-          BETA_TOL = 7;
-          GAMMA_TOL = 5;
+          document.getElementById("gauge").style.display = "none";
+          document.getElementById("statusRow").style.display = "none";
+          document.getElementById("subtitleText").innerText =
+            `Front cam (AI Auto-Capture)`;
         } else {
           TARGET_BETA = 45;
           BETA_TOL = 3;
           GAMMA_TOL = 3;
+          document.getElementById("gauge").style.display = "block";
+          document.getElementById("statusRow").style.display = "flex";
+          document.getElementById("subtitleText").innerText =
+            `Target: 45° tilt · Rear cam`;
         }
 
         let constraints = {
@@ -1050,8 +1059,6 @@
           await video.play();
 
           video.classList.toggle("mirrored", isFront);
-          document.getElementById("subtitleText").innerText =
-            `Target: ${TARGET_BETA}° tilt · ${isFront ? "Front cam" : "Rear cam"}`;
 
           const allDevices = await navigator.mediaDevices.enumerateDevices();
           const backCameras = allDevices.filter(
@@ -1113,33 +1120,49 @@
         while (isScanning) {
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
             const isFront = currentFacingMode === "user";
+            let gyroOk = true;
 
-            let betaErr = Math.abs(beta - TARGET_BETA);
-            if (betaErr > 180) betaErr = 360 - betaErr;
+            // --- TIER 1: GYROSCOPE CHECK (REAR CAMERA ONLY) ---
+            if (!isFront) {
+              let betaErr = Math.abs(beta - TARGET_BETA);
+              if (betaErr > 180) betaErr = 360 - betaErr;
 
-            const gammaErr = Math.abs(gamma - TARGET_GAMMA);
-            const tiltOk = betaErr <= BETA_TOL;
-            const rollOk = gammaErr <= GAMMA_TOL;
-            const gyroOk = tiltOk && rollOk;
+              const gammaErr = Math.abs(gamma - TARGET_GAMMA);
+              const tiltOk = betaErr <= BETA_TOL;
+              const rollOk = gammaErr <= GAMMA_TOL;
+              gyroOk = tiltOk && rollOk;
 
-            updateGyroHUD(tiltOk, rollOk, betaErr, isFront);
+              updateGyroHUD(tiltOk, rollOk, betaErr, isFront);
 
-            if (!gyroOk) {
-              steadyCount = 0;
-              document.getElementById("liveHoldProgress").style.width = "0%";
-              videoWrapper.classList.remove("detected", "gyro-ok");
+              if (!gyroOk) {
+                steadyCount = 0;
+                document.getElementById("liveHoldProgress").style.width = "0%";
+                videoWrapper.classList.remove("detected", "gyro-ok");
+              } else {
+                videoWrapper.classList.add("gyro-ok");
+                document.getElementById("guideMsg").textContent =
+                  "Angle Perfect. Analyzing Scalp...";
+                document.getElementById("guideMsg").className = "guide-main ok";
+              }
             } else {
+              // Front Camera skips Gyro restrictions
               videoWrapper.classList.add("gyro-ok");
               document.getElementById("guideMsg").textContent =
-                "Angle Perfect. Analyzing Scalp...";
+                "Analyzing Scalp...";
               document.getElementById("guideMsg").className = "guide-main ok";
+              document.getElementById("guideSub").textContent =
+                "Keep vertex in the target box";
+            }
 
+            // --- TIER 2: AI VALIDATION CHECK ---
+            if (gyroOk) {
               const vw = video.videoWidth;
               const vh = video.videoHeight;
               const cropSize = Math.min(vw, vh) * 0.8;
               const sx = (vw - cropSize) / 2;
               const sy = (vh - cropSize) / 2;
 
+              // AI still evaluates just the center crop
               sampleCtx.drawImage(
                 video,
                 sx,
@@ -1205,7 +1228,9 @@
       }
 
       function updateGyroHUD(tiltOk, rollOk, betaErr, isFront) {
-        const maxBeta = isFront ? 180 : 90;
+        if (isFront) return; // Safegaurd
+
+        const maxBeta = 90;
         let progressBetaAbs = Math.abs(beta);
         const betaClamped = Math.max(0, Math.min(maxBeta, progressBetaAbs));
         const offset = 144.51 * (1 - betaClamped / maxBeta);
@@ -1245,16 +1270,11 @@
                 ? "Tilt phone Forward ↓"
                 : "Tilt phone Upright ↑",
             );
-          if (!rollOk) {
-            if (isFront)
-              hints.push(
-                gamma < TARGET_GAMMA ? "Rotate Right ↷" : "Rotate Left ↶",
-              );
-            else
-              hints.push(
-                gamma < TARGET_GAMMA ? "Rotate Left ↶" : "Rotate Right ↷",
-              );
-          }
+          if (!rollOk)
+            hints.push(
+              gamma < TARGET_GAMMA ? "Rotate Left ↶" : "Rotate Right ↷",
+            );
+
           document.getElementById("guideMsg").textContent = hints.join("  ·  ");
           document.getElementById("guideMsg").className = "guide-main bad";
           document.getElementById("guideSub").textContent =
@@ -1281,6 +1301,7 @@
         document.body.style.overflow = "auto";
       }
 
+      // CAPTURES THE ENTIRE VISIBLE VIDEO FRAME
       function captureCameraSnapshot() {
         isScanning = false;
         const video = document.getElementById("cameraVideo");
@@ -1288,37 +1309,27 @@
 
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        const cropSize = Math.min(vw, vh) * 0.8;
-        const sx = (vw - cropSize) / 2;
-        const sy = (vh - cropSize) / 2;
 
-        canvas.width = cropSize;
-        canvas.height = cropSize;
+        canvas.width = vw;
+        canvas.height = vh;
         const ctx = canvas.getContext("2d");
+
         if (currentFacingMode === "user") {
-          ctx.translate(canvas.width, 0);
+          ctx.translate(vw, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(
-          video,
-          sx,
-          sy,
-          cropSize,
-          cropSize,
-          0,
-          0,
-          cropSize,
-          cropSize,
-        );
+
+        // Draws the full uncropped frame
+        ctx.drawImage(video, 0, 0, vw, vh);
 
         canvas.toBlob(
           (blob) => {
             stopCamera();
             previewImage.src = URL.createObjectURL(blob);
             document.getElementById("metaPitch").innerText =
-              `${lastValidBeta}°`;
+              currentFacingMode === "user" ? "N/A" : `${lastValidBeta}°`;
             document.getElementById("metaRoll").innerText =
-              `${lastValidGamma}°`;
+              currentFacingMode === "user" ? "N/A" : `${lastValidGamma}°`;
             uploadImageBlob(blob);
           },
           "image/jpeg",
