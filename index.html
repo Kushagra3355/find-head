@@ -41,6 +41,7 @@
         flex-direction: column;
         padding: 24px 16px;
       }
+
       header {
         max-width: 680px;
         margin: 0 auto 20px auto;
@@ -74,6 +75,7 @@
         font-size: 13px;
         color: var(--text-muted);
       }
+
       .badge-status {
         font-size: 12px;
         font-weight: 600;
@@ -116,42 +118,63 @@
         padding: 24px;
       }
 
-      .dropzone {
+      /* --- SIDE-BY-SIDE INPUT GRID --- */
+      .input-methods-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      @media (max-width: 480px) {
+        .input-methods-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .input-card {
         border: 2px dashed #cbd5e1;
-        border-radius: 12px;
-        padding: 38px 20px;
+        border-radius: 16px;
+        padding: 32px 16px;
         text-align: center;
         cursor: pointer;
         background: #fafbfc;
         transition: all 0.2s ease;
-        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
-      .dropzone.dragover {
+      .input-card.dragover,
+      .input-card:hover {
         border-color: var(--primary);
         background: #eff6ff;
-        transform: scale(1.005);
+        transform: translateY(-2px);
       }
-      .dropzone-icon {
-        font-size: 40px;
+      .input-card.primary-action {
+        border-style: solid;
+        border-color: var(--primary);
+        background: #eff6ff;
+      }
+      .input-card.primary-action:hover {
+        background: #e0f2fe;
+        border-color: var(--primary-hover);
+      }
+
+      .input-icon {
+        font-size: 42px;
         margin-bottom: 12px;
       }
-      .dropzone-title {
+      .input-title {
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text-main);
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
-      .dropzone-hint {
+      .input-subtitle {
         font-size: 13px;
         color: var(--text-muted);
       }
 
-      .action-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-top: 18px;
-      }
       .btn {
         display: inline-flex;
         align-items: center;
@@ -296,6 +319,7 @@
         max-width: 400px;
       }
 
+      /* Controls Bar */
       .controls-bar {
         display: flex;
         justify-content: space-between;
@@ -318,6 +342,11 @@
       .slider-group input[type="range"] {
         width: 130px;
         accent-color: var(--primary);
+      }
+      .threshold-val {
+        font-weight: 700;
+        color: var(--text-main);
+        min-width: 40px;
       }
 
       /* Results Section */
@@ -539,34 +568,27 @@
 
     <main>
       <div class="card">
-        <div
-          class="dropzone"
-          id="dropzone"
-          onclick="document.getElementById('fileInput').click()"
-        >
-          <div class="dropzone-icon">📷</div>
-          <div class="dropzone-title">
-            Drop an image here or click to browse
-          </div>
-        </div>
-        <input type="file" id="fileInput" accept="image/*" />
-
-        <div class="action-buttons">
-          <button
-            class="btn btn-secondary"
+        <!-- SIDE-BY-SIDE GRID INPUTS -->
+        <div class="input-methods-grid">
+          <div
+            class="input-card"
+            id="dropzone"
             onclick="document.getElementById('fileInput').click()"
           >
-            📁 Choose File
-          </button>
-          <button
-            class="btn btn-primary"
-            id="cameraToggleBtn"
-            onclick="toggleCamera()"
-          >
-            📹 Live Auto-Capture
-          </button>
+            <div class="input-icon">📁</div>
+            <div class="input-title">Gallery</div>
+            <div class="input-subtitle">Choose or drop file</div>
+          </div>
+          <div class="input-card primary-action" onclick="toggleCamera()">
+            <div class="input-icon">📸</div>
+            <div class="input-title">Live Camera</div>
+            <div class="input-subtitle">Auto-capture scan</div>
+          </div>
         </div>
 
+        <input type="file" id="fileInput" accept="image/*" />
+
+        <!-- Full Screen Camera Stream -->
         <div id="cameraContainer">
           <div class="video-wrapper" id="videoWrapper">
             <div class="camera-overlay-badge" id="cameraFacingBadge">
@@ -723,6 +745,7 @@
         steadyCount = 0;
       const REQUIRED_STEADY_FRAMES = 8;
 
+      // Server health poll
       fetch("/health")
         .then((res) => res.json())
         .then((data) => {
@@ -742,6 +765,7 @@
         thresholdMarker.style.left = `${val}%`;
       }
 
+      // Drag & Drop Listeners
       dropzone.addEventListener("dragover", (e) => {
         e.preventDefault();
         dropzone.classList.add("dragover");
@@ -758,6 +782,17 @@
         if (e.target.files[0]) handleFile(e.target.files[0]);
       });
 
+      // Paste support
+      window.addEventListener("paste", (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (const item of items) {
+          if (item.kind === "file" && item.type.startsWith("image/")) {
+            handleFile(item.getAsFile());
+            break;
+          }
+        }
+      });
+
       function handleFile(file) {
         if (!file.type.startsWith("image/"))
           return alert("Please provide a valid image.");
@@ -767,7 +802,7 @@
         uploadImageBlob(file);
       }
 
-      // FINAL UPLOAD LOGIC -> Calls /validate
+      // Single Endpoint API Call
       async function uploadImageBlob(blob) {
         resultCard.style.display = "block";
         resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -835,6 +870,7 @@
         window.scrollTo(0, 0);
       }
 
+      // --- FULL SCREEN CAMERA LOGIC ---
       let currentFacingMode = "environment";
       async function toggleCamera() {
         if (
@@ -866,7 +902,7 @@
             facing === "user" ? "🤳 Front Camera" : "📷 Rear Camera";
 
           document.getElementById("cameraContainer").style.display = "block";
-          document.body.style.overflow = "hidden";
+          document.body.style.overflow = "hidden"; // Lock background scrolling
           resultCard.style.display = "none";
           isScanning = true;
           steadyCount = 0;
@@ -875,7 +911,7 @@
           liveStatusText.innerText = "Position top of head inside the box";
           runInferenceLoop();
         } catch (err) {
-          alert("Could not access camera.");
+          alert("Could not access camera. Ensure permissions are granted.");
           stopCamera();
         }
       }
@@ -983,6 +1019,8 @@
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
+
+        // Crop exactly to the QR Box dimensions
         ctx.drawImage(
           video,
           sx,
