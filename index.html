@@ -190,6 +190,10 @@
         cursor: pointer;
         transition: all 0.15s ease;
       }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
       .btn-secondary {
         background: white;
         border: 1px solid var(--border-color);
@@ -205,8 +209,7 @@
         right: 0;
         bottom: 0;
         width: 100vw;
-        height: 100vh;
-        height: 100dvh; /* FIX: Prevents mobile browser bar from cutting off buttons */
+        height: 100dvh;
         background: #000;
         z-index: 9999;
         color: #fff;
@@ -241,16 +244,15 @@
         z-index: 4;
       }
       .scanner-box {
-        width: 80%; /* FIX: Increased from 65% for mobile */
+        width: 80%;
         max-width: 400px;
         aspect-ratio: 1 / 1;
         border: 3px dashed rgba(255, 255, 255, 0.8);
         border-radius: 16px;
         box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.75);
         transition: all 0.2s ease;
+        margin-bottom: 12vh; /* SHIFTS THE BOX UP TO BE VISUALLY CENTERED */
       }
-
-      /* Glows Blue for Gyro, Green for Scalp Detected */
       .video-wrapper.gyro-ok .scanner-box {
         border-color: #38bdf8;
       }
@@ -336,7 +338,6 @@
         gap: 10px;
         padding-top: 24px;
       }
-
       .status-row {
         display: flex;
         gap: 10px;
@@ -389,7 +390,7 @@
         gap: 4px;
       }
       .guide-main {
-        font-size: 15px; /* FIX: slightly smaller to prevent text wrapping */
+        font-size: 15px;
         font-weight: 700;
         transition: color 0.15s;
       }
@@ -427,7 +428,7 @@
         gap: 10px;
         margin-top: 8px;
         width: 100%;
-        flex-wrap: wrap; /* FIX: Allows buttons to stack elegantly on very thin screens */
+        flex-wrap: wrap;
       }
       .cam-btn {
         padding: 8px 16px;
@@ -551,13 +552,15 @@
           grid-template-columns: 1fr;
         }
       }
+
+      /* PREVIEW BOX - FIXED TO DISPLAY FULL UN-CROPPED SQUARE */
       .preview-box {
         width: 100%;
-        height: 180px;
+        aspect-ratio: 1 / 1;
         border-radius: 8px;
         border: 1px solid var(--border-color);
         overflow: hidden;
-        background: #f1f5f9;
+        background: #0f172a;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -565,7 +568,7 @@
       .preview-box img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
       .diagnostic-box {
@@ -589,6 +592,59 @@
         gap: 12px;
         font-size: 12px;
         color: var(--text-muted);
+      }
+
+      /* RAW JSON VIEWER */
+      .raw-json-section {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+      }
+      .raw-json-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .raw-json-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-copy-json {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn-copy-json:hover {
+        background: #e2e8f0;
+        color: var(--text-main);
+      }
+      .raw-json-pre {
+        background: #0f172a;
+        color: #38bdf8;
+        padding: 14px 16px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        line-height: 1.55;
+        overflow-x: auto;
+        font-family: ui-monospace, monospace;
+        margin: 0;
+        max-height: 260px;
       }
 
       #fileInput {
@@ -630,7 +686,6 @@
 
         <!-- Full Screen Camera Stream with Gyro HUD -->
         <div id="cameraContainer">
-          <!-- HUD Top Bar -->
           <div class="top-bar" id="hud">
             <div class="title-group">
               <div class="title">Scalp Scanner</div>
@@ -640,8 +695,36 @@
             </div>
             <div class="gauge" id="gauge">
               <svg viewBox="0 0 56 56">
-                <circle cx="28" cy="28" r="23" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-dasharray="144.51" stroke-dashoffset="36.13" transform="rotate(135 28 28)" stroke-linecap="round" />
-                <circle id="gaugeArc" cx="28" cy="28" r="23" fill="none" stroke="#ff6b6b" stroke-width="4" stroke-dasharray="144.51" stroke-dashoffset="144.51" transform="rotate(135 28 28)" stroke-linecap="round" style="transition: stroke-dashoffset 0.12s ease-out, stroke 0.2s;" />
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="23"
+                  fill="none"
+                  stroke="rgba(255,255,255,.2)"
+                  stroke-width="4"
+                  stroke-dasharray="144.51"
+                  stroke-dashoffset="36.13"
+                  transform="rotate(135 28 28)"
+                  stroke-linecap="round"
+                />
+                <circle
+                  id="gaugeArc"
+                  cx="28"
+                  cy="28"
+                  r="23"
+                  fill="none"
+                  stroke="#ff6b6b"
+                  stroke-width="4"
+                  stroke-dasharray="144.51"
+                  stroke-dashoffset="144.51"
+                  transform="rotate(135 28 28)"
+                  stroke-linecap="round"
+                  style="
+                    transition:
+                      stroke-dashoffset 0.12s ease-out,
+                      stroke 0.2s;
+                  "
+                />
               </svg>
               <div class="gauge-val" id="gaugeVal">—°</div>
             </div>
@@ -652,7 +735,6 @@
             <div class="scanner-overlay"><div class="scanner-box"></div></div>
           </div>
 
-          <!-- HUD Bottom Bar -->
           <div class="bottom-hud">
             <div class="status-row">
               <div class="chip fail" id="chipAngle">
@@ -680,12 +762,14 @@
               <button class="cam-btn" onclick="switchCamera()">
                 🔄 Flip Cam
               </button>
-              
-              <!-- FIX: New Lens Switcher Button -->
-              <button class="cam-btn" id="lensBtn" style="display:none;" onclick="toggleLens()">
+              <button
+                class="cam-btn"
+                id="lensBtn"
+                style="display: none"
+                onclick="toggleLens()"
+              >
                 🔍 Switch Lens
               </button>
-              
               <button class="cam-btn" onclick="stopCamera()">✕ Cancel</button>
             </div>
           </div>
@@ -719,7 +803,11 @@
             <div id="confidenceScore" class="meter-score approved">99.9%</div>
           </div>
           <div class="progress-bar-wrapper">
-            <div id="progressBarFill" class="progress-bar-fill approved" style="width: 90%"></div>
+            <div
+              id="progressBarFill"
+              class="progress-bar-fill approved"
+              style="width: 90%"
+            ></div>
           </div>
         </div>
         <div class="details-grid">
@@ -739,12 +827,37 @@
                 Gyro Roll: <strong id="metaRoll">-</strong>
               </div>
             </div>
-            <div style="margin-top: 10px">
+            <!-- DOWNLOAD BUTTON ADDED HERE -->
+            <div
+              style="
+                margin-top: 16px;
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+              "
+            >
+              <button class="btn btn-primary" onclick="downloadImage()">
+                💾 Download
+              </button>
               <button class="btn btn-secondary" onclick="resetTest()">
                 🔄 Test Another
               </button>
             </div>
           </div>
+        </div>
+
+        <div class="raw-json-section">
+          <div class="raw-json-header">
+            <span class="raw-json-title">{ } Raw JSON Response</span>
+            <button
+              class="btn-copy-json"
+              onclick="copyRawJson()"
+              id="copyJsonBtn"
+            >
+              📋 Copy
+            </button>
+          </div>
+          <pre class="raw-json-pre" id="rawJsonResponse">{}</pre>
         </div>
       </div>
     </main>
@@ -755,22 +868,24 @@
       const thresholdSlider = document.getElementById("thresholdSlider");
       const previewImage = document.getElementById("previewImage");
 
-      // Auto-Capture & Gyro Elements
       const videoWrapper = document.getElementById("videoWrapper");
       const sampleCanvas = document.createElement("canvas");
       sampleCanvas.width = 224;
       sampleCanvas.height = 224;
       const sampleCtx = sampleCanvas.getContext("2d");
 
-      let currentStream = null, isScanning = false, steadyCount = 0;
+      let currentStream = null,
+        isScanning = false,
+        steadyCount = 0;
       const REQUIRED_STEADY_FRAMES = 8;
 
-      // --- GYRO CONFIGURATION ---
-      let beta = 0, gamma = 0;
+      // --- GYRO CONFIGURATION & NEW TOLERANCES ---
+      let beta = 0,
+        gamma = 0;
       let TARGET_BETA = 45;
       const TARGET_GAMMA = 0;
-      const BETA_TOL = 5; 
-      const GAMMA_TOL = 5; 
+      const BETA_TOL = 15;
+      const GAMMA_TOL = 7;
       let lastValidBeta = 0;
       let lastValidGamma = 0;
 
@@ -778,10 +893,10 @@
         document.getElementById("thresholdDisplay").innerText = `${val}%`;
       }
 
-      // File Upload Handlers
       fileInput.addEventListener("change", (e) => {
         if (e.target.files[0]) handleFile(e.target.files[0]);
       });
+
       function handleFile(file) {
         if (!file.type.startsWith("image/")) return;
         stopCamera();
@@ -807,20 +922,32 @@
           const res = await fetch(apiPath, { method: "POST", body: formData });
           renderResults(await res.json());
         } catch (err) {
-          document.getElementById("diagnosticMessage").innerText = "Network error.";
+          document.getElementById("diagnosticMessage").innerText =
+            "Network error.";
         }
       }
 
       function renderResults(data) {
         const isApproved = data.is_valid;
-        document.getElementById("verdictBadge").className = `verdict-badge ${isApproved ? "approved" : "rejected"}`;
-        document.getElementById("verdictBadge").innerHTML = isApproved ? "✓ APPROVED" : "✕ REJECTED";
-        document.getElementById("confidenceScore").className = `meter-score ${isApproved ? "approved" : "rejected"}`;
-        document.getElementById("confidenceScore").innerText = `${data.confidence || 0}%`;
-        document.getElementById("progressBarFill").className = `progress-bar-fill ${isApproved ? "approved" : "rejected"}`;
-        document.getElementById("progressBarFill").style.width = `${Math.min(100, Math.max(0, data.confidence))}%`;
+        document.getElementById("verdictBadge").className =
+          `verdict-badge ${isApproved ? "approved" : "rejected"}`;
+        document.getElementById("verdictBadge").innerHTML = isApproved
+          ? "✓ APPROVED"
+          : "✕ REJECTED";
+        document.getElementById("confidenceScore").className =
+          `meter-score ${isApproved ? "approved" : "rejected"}`;
+        document.getElementById("confidenceScore").innerText =
+          `${data.confidence || 0}%`;
+        document.getElementById("progressBarFill").className =
+          `progress-bar-fill ${isApproved ? "approved" : "rejected"}`;
+        document.getElementById("progressBarFill").style.width =
+          `${Math.min(100, Math.max(0, data.confidence))}%`;
         document.getElementById("diagnosticMessage").innerText = data.message;
-        document.getElementById("metaThreshold").innerText = `${thresholdSlider.value}%`;
+        document.getElementById("metaThreshold").innerText =
+          `${thresholdSlider.value}%`;
+
+        const rawJsonEl = document.getElementById("rawJsonResponse");
+        if (rawJsonEl) rawJsonEl.textContent = JSON.stringify(data, null, 2);
       }
 
       function resetTest() {
@@ -828,16 +955,49 @@
         resultCard.style.display = "none";
         stopCamera();
         window.scrollTo(0, 0);
+        const rawJsonEl = document.getElementById("rawJsonResponse");
+        if (rawJsonEl) rawJsonEl.textContent = "{}";
       }
 
-      // --- CAMERA, LENS, & GYRO LOGIC ---
+      function copyRawJson() {
+        const rawJsonEl = document.getElementById("rawJsonResponse");
+        if (rawJsonEl && rawJsonEl.textContent) {
+          navigator.clipboard.writeText(rawJsonEl.textContent).then(() => {
+            const btn = document.getElementById("copyJsonBtn");
+            if (btn) {
+              btn.textContent = "✓ Copied!";
+              setTimeout(() => {
+                btn.textContent = "📋 Copy";
+              }, 2000);
+            }
+          });
+        }
+      }
+
+      // NEW: Download Image Function
+      function downloadImage() {
+        const imgSrc = document.getElementById("previewImage").src;
+        if (!imgSrc) return;
+        const a = document.createElement("a");
+        a.href = imgSrc;
+        a.download = `scalp_scan_${Date.now()}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
       let currentFacingMode = "environment";
-      let currentDeviceId = null; // Stores the actively running camera hardware ID
+      let currentDeviceId = null;
 
       async function toggleCamera() {
-        if (document.getElementById("cameraContainer").style.display === "block") return stopCamera();
-
-        if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+        if (
+          document.getElementById("cameraContainer").style.display === "block"
+        )
+          return stopCamera();
+        if (
+          typeof DeviceOrientationEvent !== "undefined" &&
+          typeof DeviceOrientationEvent.requestPermission === "function"
+        ) {
           try {
             const perm = await DeviceOrientationEvent.requestPermission();
             if (perm !== "granted") throw new Error("Permission denied");
@@ -855,27 +1015,25 @@
         gamma = e.gamma || 0;
       }
 
-      // FIX: Added 'deviceId' parameter to directly request a specific lens
       async function startCameraStream(facing, deviceId = null) {
-        if (currentStream) currentStream.getTracks().forEach((track) => track.stop());
-        
+        if (currentStream)
+          currentStream.getTracks().forEach((track) => track.stop());
+
         currentFacingMode = facing;
         const isFront = facing === "user";
-        TARGET_BETA = isFront ? 90 : 45; 
+        TARGET_BETA = isFront ? 180 : 45; // 180 DEGREE TARGET FOR FRONT CAM
 
-        // Set video constraints
-        let constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
-        if (deviceId && !isFront) {
-            constraints.video.deviceId = { exact: deviceId };
-        } else {
-            constraints.video.facingMode = { ideal: facing };
-        }
+        let constraints = {
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        };
+        if (deviceId && !isFront)
+          constraints.video.deviceId = { exact: deviceId };
+        else constraints.video.facingMode = { ideal: facing };
 
         try {
           let stream = await navigator.mediaDevices.getUserMedia(constraints);
           currentStream = stream;
-          
-          // Save the actual device ID we are using
           const track = stream.getVideoTracks()[0];
           currentDeviceId = track.getSettings().deviceId;
 
@@ -884,17 +1042,21 @@
           await video.play();
 
           video.classList.toggle("mirrored", isFront);
-          document.getElementById("subtitleText").innerText = `Target: ${TARGET_BETA}° tilt · ${isFront ? "Front cam" : "Rear cam"}`;
-          
-          // Check if multiple rear lenses exist to show the Lens Switch button
+          document.getElementById("subtitleText").innerText =
+            `Target: ${TARGET_BETA}° tilt · ${isFront ? "Front cam" : "Rear cam"}`;
+
           const allDevices = await navigator.mediaDevices.enumerateDevices();
-          const backCameras = allDevices.filter(d => d.kind === 'videoinput' && (!d.label || d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment')));
-          
-          if (!isFront && backCameras.length > 1) {
-              document.getElementById("lensBtn").style.display = "inline-flex";
-          } else {
-              document.getElementById("lensBtn").style.display = "none";
-          }
+          const backCameras = allDevices.filter(
+            (d) =>
+              d.kind === "videoinput" &&
+              (!d.label ||
+                d.label.toLowerCase().includes("back") ||
+                d.label.toLowerCase().includes("environment")),
+          );
+
+          if (!isFront && backCameras.length > 1)
+            document.getElementById("lensBtn").style.display = "inline-flex";
+          else document.getElementById("lensBtn").style.display = "none";
 
           document.getElementById("cameraContainer").style.display = "block";
           document.body.style.overflow = "hidden";
@@ -912,35 +1074,42 @@
         }
       }
 
-      // FIX: New function to cycle through different rear camera lenses
       async function toggleLens() {
-          if (currentFacingMode !== 'environment') return;
-          try {
-              const allDevices = await navigator.mediaDevices.enumerateDevices();
-              let backCameras = allDevices.filter(d => d.kind === 'videoinput' && (!d.label || d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment')));
-              
-              // Fallback if labels are empty
-              if (backCameras.length === 0) backCameras = allDevices.filter(d => d.kind === 'videoinput');
-              
-              if (backCameras.length <= 1) return alert("No additional rear lenses detected.");
+        if (currentFacingMode !== "environment") return;
+        try {
+          const allDevices = await navigator.mediaDevices.enumerateDevices();
+          let backCameras = allDevices.filter(
+            (d) =>
+              d.kind === "videoinput" &&
+              (!d.label ||
+                d.label.toLowerCase().includes("back") ||
+                d.label.toLowerCase().includes("environment")),
+          );
+          if (backCameras.length === 0)
+            backCameras = allDevices.filter((d) => d.kind === "videoinput");
+          if (backCameras.length <= 1)
+            return alert("No additional rear lenses detected.");
 
-              // Find current index and cycle to the next one
-              let idx = backCameras.findIndex(d => d.deviceId === currentDeviceId);
-              idx = (idx + 1) % backCameras.length; 
-              
-              // Restart stream with specific device
-              await startCameraStream('environment', backCameras[idx].deviceId);
-          } catch(e) { console.error("Lens switch error:", e); }
+          let idx = backCameras.findIndex(
+            (d) => d.deviceId === currentDeviceId,
+          );
+          idx = (idx + 1) % backCameras.length;
+          await startCameraStream("environment", backCameras[idx].deviceId);
+        } catch (e) {
+          console.error("Lens switch error:", e);
+        }
       }
 
       async function runInferenceLoop() {
         const video = document.getElementById("cameraVideo");
         while (isScanning) {
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            
-            // --- TIER 1: GYROSCOPE CHECK ---
+            // TIER 1: GYRO WITH 180 DEGREE WRAP-AROUND LOGIC
             const isFront = currentFacingMode === "user";
-            const betaErr = Math.abs(beta - TARGET_BETA);
+
+            let betaErr = Math.abs(beta - TARGET_BETA);
+            if (betaErr > 180) betaErr = 360 - betaErr; // Handles jump from +180 to -180
+
             const gammaErr = Math.abs(gamma - TARGET_GAMMA);
             const tiltOk = betaErr <= BETA_TOL;
             const rollOk = gammaErr <= GAMMA_TOL;
@@ -954,43 +1123,66 @@
               videoWrapper.classList.remove("detected", "gyro-ok");
             } else {
               videoWrapper.classList.add("gyro-ok");
-              document.getElementById("guideMsg").textContent = "Angle Perfect. Analyzing Scalp...";
+              document.getElementById("guideMsg").textContent =
+                "Angle Perfect. Analyzing Scalp...";
               document.getElementById("guideMsg").className = "guide-main ok";
 
-              // --- TIER 2: AI VALIDATION CHECK ---
+              // TIER 2: AI VALIDATION CHECK
               const vw = video.videoWidth;
               const vh = video.videoHeight;
-              
-              // FIX: Increased mathematical crop size from 65% to 80% to match visual box
-              const cropSize = Math.min(vw, vh) * 0.80;
+              const cropSize = Math.min(vw, vh) * 0.8;
               const sx = (vw - cropSize) / 2;
               const sy = (vh - cropSize) / 2;
 
-              sampleCtx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, 224, 224);
-              const blob = await new Promise((res) => sampleCanvas.toBlob(res, "image/webp", 0.8));
+              sampleCtx.drawImage(
+                video,
+                sx,
+                sy,
+                cropSize,
+                cropSize,
+                0,
+                0,
+                224,
+                224,
+              );
+              const blob = await new Promise((res) =>
+                sampleCanvas.toBlob(res, "image/webp", 0.8),
+              );
               const formData = new FormData();
               formData.append("file", blob, "frame.webp");
               const thresholdVal = parseFloat(thresholdSlider.value) / 100.0;
 
               try {
-                const apiPath = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+                const apiPath =
+                  window.location.hostname === "localhost" ||
+                  window.location.hostname === "127.0.0.1"
                     ? `http://localhost:8000/validate?threshold=${thresholdVal}`
                     : `/validate?threshold=${thresholdVal}`;
-                const res = await fetch(apiPath, { method: "POST", body: formData });
+                const res = await fetch(apiPath, {
+                  method: "POST",
+                  body: formData,
+                });
                 const data = await res.json();
 
-                if (data.is_valid || data.confidence >= parseFloat(thresholdSlider.value)) {
+                if (
+                  data.is_valid ||
+                  data.confidence >= parseFloat(thresholdSlider.value)
+                ) {
                   steadyCount++;
                   videoWrapper.classList.add("detected");
-                  document.getElementById("guideMsg").textContent = `Hold still... (AI: ${Math.round(data.confidence)}%)`;
+                  document.getElementById("guideMsg").textContent =
+                    `Hold still... (AI: ${Math.round(data.confidence)}%)`;
                 } else {
                   steadyCount = 0;
                   videoWrapper.classList.remove("detected");
-                  document.getElementById("guideMsg").textContent = "Scalp not detected in box.";
-                  document.getElementById("guideMsg").className = "guide-main bad";
+                  document.getElementById("guideMsg").textContent =
+                    "Scalp not detected in box.";
+                  document.getElementById("guideMsg").className =
+                    "guide-main bad";
                 }
 
-                document.getElementById("liveHoldProgress").style.width = `${Math.min((steadyCount / REQUIRED_STEADY_FRAMES) * 100, 100)}%`;
+                document.getElementById("liveHoldProgress").style.width =
+                  `${Math.min((steadyCount / REQUIRED_STEADY_FRAMES) * 100, 100)}%`;
 
                 if (steadyCount >= REQUIRED_STEADY_FRAMES) {
                   isScanning = false;
@@ -1007,42 +1199,67 @@
       }
 
       function updateGyroHUD(tiltOk, rollOk, betaErr, isFront) {
-        const betaClamped = Math.max(0, Math.min(90, beta));
-        const offset = 144.51 * (1 - betaClamped / 90);
-        document.getElementById("gaugeArc").setAttribute("stroke-dashoffset", offset.toFixed(2));
-        document.getElementById("gaugeArc").setAttribute("stroke", tiltOk ? "#00e68a" : "#ff6b6b");
+        const maxBeta = isFront ? 180 : 90;
+        let progressBetaAbs = Math.abs(beta);
+        const betaClamped = Math.max(0, Math.min(maxBeta, progressBetaAbs));
+        const offset = 144.51 * (1 - betaClamped / maxBeta);
+
+        document
+          .getElementById("gaugeArc")
+          .setAttribute("stroke-dashoffset", offset.toFixed(2));
+        document
+          .getElementById("gaugeArc")
+          .setAttribute("stroke", tiltOk ? "#00e68a" : "#ff6b6b");
 
         const gaugeVal = document.getElementById("gaugeVal");
         gaugeVal.textContent = Math.round(beta) + "°";
         gaugeVal.style.color = tiltOk ? "#00e68a" : "#fff";
 
-        document.getElementById("pipAngle").className = "pip " + (tiltOk ? "on" : "off");
-        document.getElementById("chipAngle").className = "chip " + (tiltOk ? "pass" : "fail");
-        document.getElementById("lblAngle").textContent = tiltOk ? Math.round(beta) + "° ✓" : Math.round(beta) + "°";
+        document.getElementById("pipAngle").className =
+          "pip " + (tiltOk ? "on" : "off");
+        document.getElementById("chipAngle").className =
+          "chip " + (tiltOk ? "pass" : "fail");
+        document.getElementById("lblAngle").textContent = tiltOk
+          ? Math.round(beta) + "° ✓"
+          : Math.round(beta) + "°";
 
-        document.getElementById("pipRoll").className = "pip " + (rollOk ? "on" : "off");
-        document.getElementById("chipRoll").className = "chip " + (rollOk ? "pass" : "fail");
-        document.getElementById("lblRoll").textContent = rollOk ? "Level ✓" : "Tilted";
+        document.getElementById("pipRoll").className =
+          "pip " + (rollOk ? "on" : "off");
+        document.getElementById("chipRoll").className =
+          "chip " + (rollOk ? "pass" : "fail");
+        document.getElementById("lblRoll").textContent = rollOk
+          ? "Level ✓"
+          : "Tilted";
 
         if (!tiltOk || !rollOk) {
           const hints = [];
-          if (!tiltOk) hints.push(beta < TARGET_BETA ? "Tilt phone Forward ↓" : "Tilt phone Upright ↑");
-
+          if (!tiltOk)
+            hints.push(
+              betaErr > 0 && Math.abs(beta) < TARGET_BETA
+                ? "Tilt phone Forward ↓"
+                : "Tilt phone Upright ↑",
+            );
           if (!rollOk) {
-            if (isFront) {
-              hints.push(gamma < TARGET_GAMMA ? "Rotate Right ↷" : "Rotate Left ↶");
-            } else {
-              hints.push(gamma < TARGET_GAMMA ? "Rotate Left ↶" : "Rotate Right ↷");
-            }
+            if (isFront)
+              hints.push(
+                gamma < TARGET_GAMMA ? "Rotate Right ↷" : "Rotate Left ↶",
+              );
+            else
+              hints.push(
+                gamma < TARGET_GAMMA ? "Rotate Left ↶" : "Rotate Right ↷",
+              );
           }
           document.getElementById("guideMsg").textContent = hints.join("  ·  ");
           document.getElementById("guideMsg").className = "guide-main bad";
-          document.getElementById("guideSub").textContent = `Target: ${TARGET_BETA}° tilt (±${BETA_TOL}°), level hold`;
+          document.getElementById("guideSub").textContent =
+            `Target: ${TARGET_BETA}° tilt (±${BETA_TOL}°), level hold`;
         }
       }
 
       async function switchCamera() {
-        await startCameraStream(currentFacingMode === "environment" ? "user" : "environment");
+        await startCameraStream(
+          currentFacingMode === "environment" ? "user" : "environment",
+        );
       }
 
       function stopCamera() {
@@ -1052,7 +1269,8 @@
           currentStream.getTracks().forEach((track) => track.stop());
           currentStream = null;
         }
-        if (document.getElementById("cameraVideo")) document.getElementById("cameraVideo").srcObject = null;
+        if (document.getElementById("cameraVideo"))
+          document.getElementById("cameraVideo").srcObject = null;
         document.getElementById("cameraContainer").style.display = "none";
         document.body.style.overflow = "auto";
       }
@@ -1064,9 +1282,7 @@
 
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        
-        // FIX: Ensure final high-res snapshot also matches new 80% size
-        const cropSize = Math.min(vw, vh) * 0.80; 
+        const cropSize = Math.min(vw, vh) * 0.8;
         const sx = (vw - cropSize) / 2;
         const sy = (vh - cropSize) / 2;
 
@@ -1077,14 +1293,26 @@
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, cropSize, cropSize);
+        ctx.drawImage(
+          video,
+          sx,
+          sy,
+          cropSize,
+          cropSize,
+          0,
+          0,
+          cropSize,
+          cropSize,
+        );
 
         canvas.toBlob(
           (blob) => {
             stopCamera();
             previewImage.src = URL.createObjectURL(blob);
-            document.getElementById("metaPitch").innerText = `${lastValidBeta}°`;
-            document.getElementById("metaRoll").innerText = `${lastValidGamma}°`;
+            document.getElementById("metaPitch").innerText =
+              `${lastValidBeta}°`;
+            document.getElementById("metaRoll").innerText =
+              `${lastValidGamma}°`;
             uploadImageBlob(blob);
           },
           "image/jpeg",
