@@ -585,6 +585,61 @@
         font-size: 12px;
         color: var(--text-muted);
       }
+      /* RAW JSON VIEWER */
+      .raw-json-section {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+      }
+      .raw-json-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .raw-json-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-copy-json {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn-copy-json:hover {
+        background: #e2e8f0;
+        color: var(--text-main);
+      }
+      .raw-json-pre {
+        background: #0f172a;
+        color: #38bdf8;
+        padding: 14px 16px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        line-height: 1.55;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        margin: 0;
+        border: 1px solid #1e293b;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        max-height: 260px;
+      }
+
       #fileInput {
         display: none;
       }
@@ -766,6 +821,15 @@
             </div>
           </div>
         </div>
+
+        <!-- Raw JSON Response -->
+        <div class="raw-json-section">
+          <div class="raw-json-header">
+            <span class="raw-json-title">{ } Raw JSON Response</span>
+            <button class="btn-copy-json" onclick="copyRawJson()" id="copyJsonBtn">📋 Copy</button>
+          </div>
+          <pre class="raw-json-pre" id="rawJsonResponse">{}</pre>
+        </div>
       </div>
     </main>
 
@@ -825,7 +889,7 @@
           const apiPath =
             window.location.hostname === "localhost" ||
             window.location.hostname === "127.0.0.1"
-              ? `http://localhost:8000/validate?threshold=${thresholdVal}`
+              ? `http://localhost:5003/validate?threshold=${thresholdVal}`
               : `/validate?threshold=${thresholdVal}`;
           const res = await fetch(apiPath, { method: "POST", body: formData });
           renderResults(await res.json());
@@ -853,6 +917,12 @@
         document.getElementById("diagnosticMessage").innerText = data.message;
         document.getElementById("metaThreshold").innerText =
           `${thresholdSlider.value}%`;
+
+        // Render Raw JSON
+        const rawJsonEl = document.getElementById("rawJsonResponse");
+        if (rawJsonEl) {
+          rawJsonEl.textContent = JSON.stringify(data, null, 2);
+        }
       }
 
       function resetTest() {
@@ -860,6 +930,25 @@
         resultCard.style.display = "none";
         stopCamera();
         window.scrollTo(0, 0);
+        const rawJsonEl = document.getElementById("rawJsonResponse");
+        if (rawJsonEl) {
+          rawJsonEl.textContent = "{}";
+        }
+      }
+
+      function copyRawJson() {
+        const rawJsonEl = document.getElementById("rawJsonResponse");
+        if (rawJsonEl && rawJsonEl.textContent) {
+          navigator.clipboard.writeText(rawJsonEl.textContent).then(() => {
+            const btn = document.getElementById("copyJsonBtn");
+            if (btn) {
+              btn.textContent = "✓ Copied!";
+              setTimeout(() => {
+                btn.textContent = "📋 Copy";
+              }, 2000);
+            }
+          });
+        }
       }
 
       // --- FULL SCREEN CAMERA & GYRO LOGIC ---
@@ -990,8 +1079,9 @@
 
               try {
                 const apiPath =
-                  window.location.hostname === "localhost"
-                    ? `http://localhost:8000/validate?threshold=${thresholdVal}`
+                  window.location.hostname === "localhost" ||
+                  window.location.hostname === "127.0.0.1"
+                    ? `http://localhost:5003/validate?threshold=${thresholdVal}`
                     : `/validate?threshold=${thresholdVal}`;
                 const res = await fetch(apiPath, {
                   method: "POST",
