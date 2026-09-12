@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scalp Image Validator - Auto-Capture</title>
+    <title>Scalp Image Validator</title>
     <style>
       :root {
         --primary: #2563eb;
@@ -25,7 +25,6 @@
         --shadow:
           0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
       }
-
       * {
         box-sizing: border-box;
         margin: 0;
@@ -34,7 +33,6 @@
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
           Cantarell, sans-serif;
       }
-
       body {
         background-color: var(--bg-page);
         color: var(--text-main);
@@ -43,7 +41,6 @@
         flex-direction: column;
         padding: 24px 16px;
       }
-
       header {
         max-width: 680px;
         margin: 0 auto 20px auto;
@@ -52,13 +49,11 @@
         justify-content: space-between;
         align-items: center;
       }
-
       .brand {
         display: flex;
         align-items: center;
         gap: 10px;
       }
-
       .brand-icon {
         width: 38px;
         height: 38px;
@@ -70,18 +65,15 @@
         justify-content: center;
         font-size: 20px;
       }
-
       .brand-title {
         font-size: 20px;
         font-weight: 700;
         letter-spacing: -0.02em;
       }
-
       .brand-subtitle {
         font-size: 13px;
         color: var(--text-muted);
       }
-
       .badge-status {
         font-size: 12px;
         font-weight: 600;
@@ -93,7 +85,6 @@
         background: #e0f2fe;
         color: #0369a1;
       }
-
       .badge-status::before {
         content: "";
         width: 8px;
@@ -101,7 +92,6 @@
         border-radius: 50%;
         background: #0284c7;
       }
-
       .badge-status.online {
         background: #ecfdf5;
         color: #047857;
@@ -118,7 +108,6 @@
         flex-direction: column;
         gap: 16px;
       }
-
       .card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
@@ -127,7 +116,6 @@
         padding: 24px;
       }
 
-      /* Drop Zone */
       .dropzone {
         border: 2px dashed #cbd5e1;
         border-radius: 12px;
@@ -138,36 +126,24 @@
         transition: all 0.2s ease;
         position: relative;
       }
-
       .dropzone.dragover {
         border-color: var(--primary);
         background: #eff6ff;
         transform: scale(1.005);
       }
-
       .dropzone-icon {
         font-size: 40px;
         margin-bottom: 12px;
       }
-
       .dropzone-title {
         font-size: 16px;
         font-weight: 600;
         color: var(--text-main);
         margin-bottom: 6px;
       }
-
       .dropzone-hint {
         font-size: 13px;
         color: var(--text-muted);
-      }
-
-      .dropzone-hint kbd {
-        background: #e2e8f0;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-family: inherit;
       }
 
       .action-buttons {
@@ -176,7 +152,6 @@
         gap: 12px;
         margin-top: 18px;
       }
-
       .btn {
         display: inline-flex;
         align-items: center;
@@ -190,123 +165,137 @@
         cursor: pointer;
         transition: all 0.15s ease;
       }
-
       .btn-primary {
         background: var(--primary);
         color: white;
       }
-      .btn-primary:hover {
-        background: var(--primary-hover);
-      }
-
       .btn-secondary {
         background: white;
         border: 1px solid var(--border-color);
         color: var(--text-main);
       }
-      .btn-secondary:hover {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
-      }
 
-      /* Camera View Updates for Auto-Capture */
+      /* FULL SCREEN CAMERA */
       #cameraContainer {
         display: none;
-        margin-top: 16px;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #0f172a;
-        text-align: center;
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        z-index: 9999;
       }
-
       .video-wrapper {
         position: relative;
-        border: 4px solid transparent;
-        transition: all 0.25s ease;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
       }
-
-      .video-wrapper.detected {
-        border-color: var(--success-bar);
-        box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.4);
-      }
-
       #cameraVideo {
         width: 100%;
-        max-height: 400px;
+        height: 100%;
         object-fit: cover;
         display: block;
-        background: #000;
         transition: transform 0.2s ease;
       }
-
       #cameraVideo.mirrored {
         transform: scaleX(-1);
       }
 
-      /* Live Feed Overlays */
-      .camera-overlay-badge {
+      /* QR Scanner Box */
+      .scanner-overlay {
         position: absolute;
-        top: 12px;
-        left: 12px;
-        background: rgba(15, 23, 42, 0.75);
-        color: #f8fafc;
-        padding: 5px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        z-index: 5;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         align-items: center;
-        gap: 6px;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 4;
+      }
+      .scanner-box {
+        width: 65%;
+        max-width: 350px;
+        aspect-ratio: 1 / 1;
+        border: 3px dashed rgba(255, 255, 255, 0.8);
+        border-radius: 16px;
+        box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.75);
+        transition: all 0.2s ease;
+      }
+      .video-wrapper.detected .scanner-box {
+        border-color: var(--success-bar);
+        border-style: solid;
+        box-shadow:
+          0 0 0 2000px rgba(0, 0, 0, 0.75),
+          inset 0 0 30px rgba(16, 185, 129, 0.5);
+        transform: scale(1.02);
       }
 
+      .camera-overlay-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(15, 23, 42, 0.75);
+        color: #f8fafc;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+        z-index: 5;
+      }
       .live-status-overlay {
         position: absolute;
-        bottom: 12px;
+        bottom: 120px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(15, 23, 42, 0.85);
         color: white;
-        padding: 8px 16px;
+        padding: 12px 24px;
         border-radius: 8px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         z-index: 5;
         text-align: center;
-        width: 80%;
-        backdrop-filter: blur(4px);
+        min-width: 250px;
       }
-
       .hold-progress-container {
         width: 100%;
         height: 6px;
         background: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
-        margin-top: 8px;
+        margin-top: 10px;
         overflow: hidden;
       }
-
       .hold-progress-bar {
         height: 100%;
         width: 0%;
         background: var(--success-bar);
         transition: width 0.15s linear;
       }
-
       .camera-actions {
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.85);
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 20px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
+        gap: 12px;
+        z-index: 5;
+        width: 90%;
+        max-width: 400px;
       }
 
-      /* Controls Bar */
       .controls-bar {
         display: flex;
         justify-content: space-between;
@@ -319,7 +308,6 @@
         flex-wrap: wrap;
         gap: 12px;
       }
-
       .slider-group {
         display: flex;
         align-items: center;
@@ -327,16 +315,9 @@
         font-size: 13px;
         color: var(--text-muted);
       }
-
       .slider-group input[type="range"] {
         width: 130px;
         accent-color: var(--primary);
-      }
-
-      .threshold-val {
-        font-weight: 700;
-        color: var(--text-main);
-        min-width: 40px;
       }
 
       /* Results Section */
@@ -344,7 +325,6 @@
         display: none;
         margin-top: 8px;
       }
-
       .result-header {
         display: flex;
         justify-content: space-between;
@@ -353,7 +333,6 @@
         flex-wrap: wrap;
         gap: 10px;
       }
-
       .verdict-badge {
         display: inline-flex;
         align-items: center;
@@ -363,7 +342,6 @@
         padding: 8px 16px;
         border-radius: 30px;
       }
-
       .verdict-badge.approved {
         background: var(--success-bg);
         color: var(--success-text);
@@ -374,7 +352,6 @@
         color: var(--danger-text);
         border: 1px solid var(--danger-border);
       }
-
       .latency-pill {
         font-size: 12px;
         font-weight: 600;
@@ -384,7 +361,6 @@
         border-radius: 20px;
       }
 
-      /* Gauge / Progress Bar */
       .meter-container {
         margin-bottom: 20px;
       }
@@ -429,7 +405,6 @@
       .progress-bar-fill.rejected {
         background: var(--danger-bar);
       }
-
       .threshold-marker {
         position: absolute;
         top: -4px;
@@ -447,10 +422,8 @@
         font-size: 10px;
         font-weight: 600;
         color: var(--text-muted);
-        white-space: nowrap;
       }
 
-      /* Layout for Preview and Diagnostic */
       .details-grid {
         display: grid;
         grid-template-columns: 180px 1fr;
@@ -462,7 +435,6 @@
           grid-template-columns: 1fr;
         }
       }
-
       .preview-box {
         width: 100%;
         height: 180px;
@@ -479,6 +451,27 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+      }
+      .scanning-line {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #38bdf8;
+        box-shadow:
+          0 0 10px #38bdf8,
+          0 0 20px #0284c7;
+        animation: scan 1.2s infinite alternate ease-in-out;
+      }
+      @keyframes scan {
+        0% {
+          top: 0%;
+        }
+        100% {
+          top: 96%;
+        }
       }
 
       .diagnostic-box {
@@ -506,7 +499,6 @@
       .meta-item strong {
         color: var(--text-main);
       }
-
       details {
         margin-top: 14px;
         border: 1px solid var(--border-color);
@@ -516,11 +508,9 @@
       summary {
         font-size: 12px;
         font-weight: 600;
-        color: var(--text-muted);
         padding: 8px 12px;
         background: #f8fafc;
         cursor: pointer;
-        user-select: none;
       }
       pre {
         padding: 12px;
@@ -529,7 +519,6 @@
         font-size: 12px;
         overflow-x: auto;
         line-height: 1.4;
-        font-family: ui-monospace, monospace;
       }
       #fileInput {
         display: none;
@@ -537,7 +526,6 @@
     </style>
   </head>
   <body>
-    <!-- Header -->
     <header>
       <div class="brand">
         <div class="brand-icon">🔬</div>
@@ -551,7 +539,6 @@
 
     <main>
       <div class="card">
-        <!-- Main Drag & Drop Zone -->
         <div
           class="dropzone"
           id="dropzone"
@@ -561,14 +548,9 @@
           <div class="dropzone-title">
             Drop an image here or click to browse
           </div>
-          <div class="dropzone-hint">
-            Supports JPEG, PNG, WebP • Or press <kbd>Ctrl+V</kbd> anywhere to
-            paste from clipboard
-          </div>
         </div>
         <input type="file" id="fileInput" accept="image/*" />
 
-        <!-- Action Buttons -->
         <div class="action-buttons">
           <button
             class="btn btn-secondary"
@@ -585,7 +567,6 @@
           </button>
         </div>
 
-        <!-- Live Camera Stream container -->
         <div id="cameraContainer">
           <div class="video-wrapper" id="videoWrapper">
             <div class="camera-overlay-badge" id="cameraFacingBadge">
@@ -593,9 +574,14 @@
             </div>
             <video id="cameraVideo" autoplay playsinline muted></video>
 
-            <!-- Auto Capture Overlay -->
+            <div class="scanner-overlay" id="scannerOverlay">
+              <div class="scanner-box" id="scannerBox"></div>
+            </div>
+
             <div class="live-status-overlay" id="liveStatusOverlay">
-              <span id="liveStatusText">Align camera with top of head</span>
+              <span id="liveStatusText"
+                >Position top of head inside the box</span
+              >
               <div class="hold-progress-container">
                 <div class="hold-progress-bar" id="liveHoldProgress"></div>
               </div>
@@ -606,7 +592,6 @@
             <button
               type="button"
               class="btn btn-secondary"
-              id="cameraSwitchBtn"
               onclick="switchCamera()"
             >
               🔄 Switch
@@ -616,7 +601,7 @@
               class="btn btn-primary"
               onclick="captureCameraSnapshot()"
             >
-              📸 Manual Snap
+              📸 Snap
             </button>
             <button
               type="button"
@@ -628,7 +613,6 @@
           </div>
         </div>
 
-        <!-- Sensitivity & Threshold Settings -->
         <div class="controls-bar">
           <div class="slider-group">
             <span>Acceptance Threshold:</span>
@@ -641,10 +625,7 @@
               step="1"
               oninput="updateThresholdLabel(this.value)"
             />
-            <span id="thresholdDisplay" class="threshold-val">70%</span>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted)">
-            Model Target: 224×224 RGB
+            <span id="thresholdDisplay" style="font-weight: 700">70%</span>
           </div>
         </div>
       </div>
@@ -656,7 +637,6 @@
           <div id="latencyBadge" class="latency-pill">⚡ 0 ms</div>
         </div>
 
-        <!-- Confidence Gauge -->
         <div class="meter-container">
           <div class="meter-header">
             <div class="meter-label">Model Confidence Score</div>
@@ -676,10 +656,10 @@
           </div>
         </div>
 
-        <!-- Dual Preview & Meta -->
         <div class="details-grid">
           <div class="preview-box">
-            <img id="previewImage" alt="Validated Image Preview" src="" />
+            <img id="previewImage" src="" />
+            <div id="scannerLine" class="scanning-line"></div>
           </div>
           <div class="diagnostic-box">
             <div id="diagnosticMessage" class="diagnostic-message">
@@ -702,7 +682,7 @@
                 style="font-size: 12px; padding: 6px 12px"
                 onclick="resetTest()"
               >
-                🔄 Start Over
+                🔄 Test Another
               </button>
             </div>
           </div>
@@ -724,105 +704,80 @@
       const progressBarFill = document.getElementById("progressBarFill");
       const thresholdMarker = document.getElementById("thresholdMarker");
       const thresholdSlider = document.getElementById("thresholdSlider");
-      const thresholdDisplay = document.getElementById("thresholdDisplay");
       const previewImage = document.getElementById("previewImage");
+      const scannerLine = document.getElementById("scannerLine");
       const diagnosticMessage = document.getElementById("diagnosticMessage");
-      const latencyBadge = document.getElementById("latencyBadge");
       const jsonOutput = document.getElementById("jsonOutput");
-      const metaThreshold = document.getElementById("metaThreshold");
-      const metaVerdict = document.getElementById("metaVerdict");
-      const metaLatency = document.getElementById("metaLatency");
-      const serverBadge = document.getElementById("serverBadge");
 
-      // Auto-Capture Elements
       const videoWrapper = document.getElementById("videoWrapper");
       const liveStatusText = document.getElementById("liveStatusText");
       const liveHoldProgress = document.getElementById("liveHoldProgress");
-
-      // Hidden canvas for downscaling inference frames
       const sampleCanvas = document.createElement("canvas");
       sampleCanvas.width = 224;
       sampleCanvas.height = 224;
       const sampleCtx = sampleCanvas.getContext("2d");
 
-      let currentStream = null;
-      let lastUploadedBlob = null;
+      let currentStream = null,
+        lastUploadedBlob = null,
+        isScanning = false,
+        steadyCount = 0;
+      const REQUIRED_STEADY_FRAMES = 8;
 
-      // Auto-Capture State
-      let isScanning = false;
-      let steadyCount = 0;
-      const REQUIRED_STEADY_FRAMES = 8; // ~1 second hold
-
-      // Check server health on load
       fetch("/health")
         .then((res) => res.json())
         .then((data) => {
           if (data.status === "healthy") {
-            serverBadge.className = "badge-status online";
-            serverBadge.innerText = "API Online";
+            document.getElementById("serverBadge").className =
+              "badge-status online";
+            document.getElementById("serverBadge").innerText = "API Online";
           }
         })
         .catch(() => {
-          serverBadge.className = "badge-status";
-          serverBadge.innerText = "API Offline";
+          document.getElementById("serverBadge").className = "badge-status";
+          document.getElementById("serverBadge").innerText = "API Offline";
         });
 
-      // Threshold Slider
       function updateThresholdLabel(val) {
-        thresholdDisplay.innerText = `${val}%`;
+        document.getElementById("thresholdDisplay").innerText = `${val}%`;
         thresholdMarker.style.left = `${val}%`;
-        if (lastUploadedBlob && !isScanning) {
-          uploadImageBlob(lastUploadedBlob);
-        }
       }
 
-      // Drag and Drop Handling (Preserved for manual testing)
       dropzone.addEventListener("dragover", (e) => {
         e.preventDefault();
         dropzone.classList.add("dragover");
       });
-      dropzone.addEventListener("dragleave", () => {
-        dropzone.classList.remove("dragover");
-      });
+      dropzone.addEventListener("dragleave", () =>
+        dropzone.classList.remove("dragover"),
+      );
       dropzone.addEventListener("drop", (e) => {
         e.preventDefault();
         dropzone.classList.remove("dragover");
-        if (e.dataTransfer.files && e.dataTransfer.files[0])
-          handleFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
       });
       fileInput.addEventListener("change", (e) => {
-        if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
-      });
-      window.addEventListener("paste", (e) => {
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (const item of items) {
-          if (item.kind === "file" && item.type.startsWith("image/")) {
-            handleFile(item.getAsFile());
-            break;
-          }
-        }
+        if (e.target.files[0]) handleFile(e.target.files[0]);
       });
 
       function handleFile(file) {
         if (!file.type.startsWith("image/"))
-          return alert("Please provide a valid image file.");
-        stopCamera(); // Ensure camera is off if they drop an image
+          return alert("Please provide a valid image.");
+        stopCamera();
         lastUploadedBlob = file;
         previewImage.src = URL.createObjectURL(file);
         uploadImageBlob(file);
       }
 
-      // Send image to /validate endpoint
+      // FINAL UPLOAD LOGIC -> Calls /validate
       async function uploadImageBlob(blob) {
         resultCard.style.display = "block";
         resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        scannerLine.style.display = "block";
 
         const thresholdVal = parseFloat(thresholdSlider.value) / 100.0;
         const formData = new FormData();
         formData.append("file", blob, "test_image.jpg");
 
         try {
-          // Fallback to localhost if '/validate' fails in dev
           const apiPath =
             window.location.hostname === "localhost" ||
             window.location.hostname === "127.0.0.1"
@@ -834,9 +789,11 @@
             body: formData,
           });
           const data = await response.json();
+
+          scannerLine.style.display = "none";
           renderResults(data);
         } catch (err) {
-          console.error("Validation error:", err);
+          scannerLine.style.display = "none";
           diagnosticMessage.innerText =
             "Network error: could not connect to FastAPI server.";
           verdictBadge.className = "verdict-badge rejected";
@@ -848,68 +805,49 @@
         jsonOutput.innerText = JSON.stringify(data, null, 2);
         const isApproved = data.is_valid;
         const confidence = data.confidence || 0;
-        const latency = data.inference_time_ms || 0;
-        const thresholdPercent = parseInt(thresholdSlider.value);
 
         verdictBadge.className = `verdict-badge ${isApproved ? "approved" : "rejected"}`;
         verdictBadge.innerHTML = isApproved
           ? "✓ APPROVED • Vertex Scalp"
           : "✕ REJECTED • Invalid Region";
-        latencyBadge.innerText = `⚡ ${latency} ms inference`;
+        document.getElementById("latencyBadge").innerText =
+          `⚡ ${data.inference_time_ms} ms`;
 
         confidenceScore.className = `meter-score ${isApproved ? "approved" : "rejected"}`;
-        confidenceScore.innerText = `${confidence.toFixed(1)}%`;
+        confidenceScore.innerText = `${confidence}%`;
         progressBarFill.className = `progress-bar-fill ${isApproved ? "approved" : "rejected"}`;
         progressBarFill.style.width = `${Math.min(100, Math.max(0, confidence))}%`;
 
-        diagnosticMessage.innerText =
-          data.message ||
-          (isApproved
-            ? "Image meets clinical vertex scalp standards."
-            : "Image does not clearly show the top vertex of the scalp.");
-        metaThreshold.innerText = `${thresholdPercent}%`;
-        metaVerdict.innerText =
-          data.status || (isApproved ? "APPROVED" : "REJECTED");
-        metaLatency.innerText = `${latency} ms`;
+        diagnosticMessage.innerText = data.message;
+        document.getElementById("metaThreshold").innerText =
+          `${thresholdSlider.value}%`;
+        document.getElementById("metaVerdict").innerText = isApproved
+          ? "APPROVED"
+          : "REJECTED";
+        document.getElementById("metaLatency").innerText =
+          `${data.inference_time_ms} ms`;
       }
 
       function resetTest() {
         fileInput.value = "";
-        lastUploadedBlob = null;
         resultCard.style.display = "none";
         stopCamera();
         window.scrollTo(0, 0);
       }
 
-      // --- REAL-TIME CAMERA & AUTO-CAPTURE LOGIC ---
       let currentFacingMode = "environment";
-
       async function toggleCamera() {
-        const container = document.getElementById("cameraContainer");
-        if (container.style.display === "block") {
-          stopCamera();
-          return;
-        }
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          return alert(
-            "Camera API is not supported or is blocked (HTTPS required).",
-          );
-        }
+        if (
+          document.getElementById("cameraContainer").style.display === "block"
+        )
+          return stopCamera();
         await startCameraStream(currentFacingMode);
       }
 
       async function startCameraStream(facing) {
-        const container = document.getElementById("cameraContainer");
-        const video = document.getElementById("cameraVideo");
-        const switchBtn = document.getElementById("cameraSwitchBtn");
-        const badge = document.getElementById("cameraFacingBadge");
-
-        if (currentStream) {
+        if (currentStream)
           currentStream.getTracks().forEach((track) => track.stop());
-        }
         currentFacingMode = facing;
-        const isFront = facing === "user";
-
         try {
           let stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -919,49 +857,53 @@
             },
             audio: false,
           });
-
           currentStream = stream;
+          const video = document.getElementById("cameraVideo");
           video.srcObject = stream;
           await video.play();
+          video.classList.toggle("mirrored", facing === "user");
+          document.getElementById("cameraFacingBadge").innerHTML =
+            facing === "user" ? "🤳 Front Camera" : "📷 Rear Camera";
 
-          if (isFront) video.classList.add("mirrored");
-          else video.classList.remove("mirrored");
-
-          if (badge)
-            badge.innerHTML = isFront ? "🤳 Front Camera" : "📷 Rear Camera";
-          container.style.display = "block";
-
-          // Hide result card while scanning
+          document.getElementById("cameraContainer").style.display = "block";
+          document.body.style.overflow = "hidden";
           resultCard.style.display = "none";
-
-          // Reset and Start the Auto-Capture Loop
           isScanning = true;
           steadyCount = 0;
           liveHoldProgress.style.width = "0%";
           videoWrapper.classList.remove("detected");
-          liveStatusText.innerText = "Align camera with top of head";
-
+          liveStatusText.innerText = "Position top of head inside the box";
           runInferenceLoop();
         } catch (err) {
-          console.error("Camera access error:", err);
-          alert(
-            "Could not access camera. Please ensure permissions are granted.",
-          );
+          alert("Could not access camera.");
           stopCamera();
         }
       }
 
       async function runInferenceLoop() {
         const video = document.getElementById("cameraVideo");
-
         while (isScanning) {
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            // Grab lightweight 224x224 frame
-            sampleCtx.drawImage(video, 0, 0, 224, 224);
+            const vw = video.videoWidth;
+            const vh = video.videoHeight;
+            const cropSize = Math.min(vw, vh) * 0.65;
+            const sx = (vw - cropSize) / 2;
+            const sy = (vh - cropSize) / 2;
+
+            sampleCtx.drawImage(
+              video,
+              sx,
+              sy,
+              cropSize,
+              cropSize,
+              0,
+              0,
+              224,
+              224,
+            );
             const blob = await new Promise((resolve) =>
               sampleCanvas.toBlob(resolve, "image/webp", 0.8),
             );
-
             const thresholdVal = parseFloat(thresholdSlider.value) / 100.0;
             const formData = new FormData();
             formData.append("file", blob, "frame.webp");
@@ -972,7 +914,6 @@
                 window.location.hostname === "127.0.0.1"
                   ? `http://localhost:8000/validate?threshold=${thresholdVal}`
                   : `/validate?threshold=${thresholdVal}`;
-
               const res = await fetch(apiPath, {
                 method: "POST",
                 body: formData,
@@ -983,42 +924,33 @@
               if (data.is_valid || data.confidence >= currentThreshold) {
                 steadyCount++;
                 videoWrapper.classList.add("detected");
-                liveStatusText.innerText = `Hold still... (${Math.round(data.confidence)}%)`;
+                liveStatusText.innerText = `Hold still... (Scalp: ${Math.round(data.confidence)}%)`;
               } else {
                 steadyCount = 0;
                 videoWrapper.classList.remove("detected");
-                liveStatusText.innerText = "Align camera with top of head";
+                liveStatusText.innerText =
+                  "Position top of head inside the box";
               }
-
-              const progressPercent = Math.min(
-                (steadyCount / REQUIRED_STEADY_FRAMES) * 100,
-                100,
-              );
-              liveHoldProgress.style.width = `${progressPercent}%`;
-
-              // TRIGGER AUTO CAPTURE
+              liveHoldProgress.style.width = `${Math.min((steadyCount / REQUIRED_STEADY_FRAMES) * 100, 100)}%`;
               if (steadyCount >= REQUIRED_STEADY_FRAMES) {
                 isScanning = false;
                 captureCameraSnapshot();
                 break;
               }
-            } catch (e) {
-              console.warn("Inference poll skipped:", e);
-            }
+            } catch (e) {}
           }
-          // Throttle to roughly ~8 frames per second
           await new Promise((resolve) => setTimeout(resolve, 120));
         }
       }
 
       async function switchCamera() {
-        const nextFacing =
-          currentFacingMode === "environment" ? "user" : "environment";
-        await startCameraStream(nextFacing);
+        await startCameraStream(
+          currentFacingMode === "environment" ? "user" : "environment",
+        );
       }
 
       function stopCamera() {
-        isScanning = false; // Kill inference loop
+        isScanning = false;
         if (currentStream) {
           currentStream.getTracks().forEach((track) => track.stop());
           currentStream = null;
@@ -1029,34 +961,49 @@
           video.classList.remove("mirrored");
         }
         document.getElementById("cameraContainer").style.display = "none";
+        document.body.style.overflow = "auto";
         videoWrapper.classList.remove("detected");
       }
 
-      // Snaps the high-res photo, stops camera, and pushes to final Results Card
       function captureCameraSnapshot() {
         isScanning = false;
         const video = document.getElementById("cameraVideo");
         const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth || 1280;
-        canvas.height = video.videoHeight || 720;
 
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const cropSize = Math.min(vw, vh) * 0.65;
+        const sx = (vw - cropSize) / 2;
+        const sy = (vh - cropSize) / 2;
+
+        canvas.width = cropSize;
+        canvas.height = cropSize;
         const ctx = canvas.getContext("2d");
-        // Handle mirroring on capture if front camera is used
         if (currentFacingMode === "user") {
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(
+          video,
+          sx,
+          sy,
+          cropSize,
+          cropSize,
+          0,
+          0,
+          cropSize,
+          cropSize,
+        );
 
         canvas.toBlob(
           (blob) => {
             stopCamera();
             lastUploadedBlob = blob;
             previewImage.src = URL.createObjectURL(blob);
-            uploadImageBlob(blob); // Send final high-res shot to the server
+            uploadImageBlob(blob);
           },
           "image/jpeg",
-          0.9,
+          1.0,
         );
       }
     </script>
