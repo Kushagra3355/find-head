@@ -463,6 +463,25 @@
         accent-color: var(--primary);
       }
 
+      .capture-guidelines h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+      .capture-guidelines ol {
+        padding-left: 22px;
+        color: var(--text-muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .capture-guidelines li {
+        padding-left: 4px;
+        margin-bottom: 6px;
+      }
+      .capture-guidelines li:first-child {
+        color: var(--text-main);
+        font-weight: 700;
+      }
+
       #resultCard {
         display: none;
         margin-top: 8px;
@@ -639,7 +658,6 @@
         margin: 0;
         max-height: 260px;
       }
-
     </style>
   </head>
   <body>
@@ -660,7 +678,12 @@
           <div class="input-card primary-action" onclick="toggleCamera()">
             <div class="input-icon">📸</div>
             <div class="input-title">Start Live Camera Scanner</div>
-            <div class="input-subtitle">Guided Auto-capture with angle sensors</div>
+            <div class="input-subtitle">
+              <strong>First: Keep the vertex inside the target box.</strong
+              ><br />
+              Use clear lighting, keep the camera steady, and follow the
+              on-screen guidance.
+            </div>
           </div>
         </div>
 
@@ -670,7 +693,7 @@
             <div class="title-group">
               <div class="title">Scalp Scanner</div>
               <div class="subtitle" id="subtitleText">
-                Target: 45° tilt · Rear cam
+                Target: 35° tilt · Rear cam
               </div>
             </div>
 
@@ -843,6 +866,28 @@
           <pre class="raw-json-pre" id="rawJsonResponse">{}</pre>
         </div>
       </div>
+
+      <div class="card capture-guidelines">
+        <h2>Capture Guidelines</h2>
+        <ol>
+          <li>Place the top of the head (vertex) inside the target box.</li>
+          <li>Use a clean camera lens.</li>
+          <li>Capture the image in bright, even lighting.</li>
+          <li>Keep the subject centered and fully visible.</li>
+          <li>Hold the camera steady and avoid movement.</li>
+          <li>Keep the camera at the recommended angle and distance.</li>
+          <li>Make sure the image is sharp and in focus.</li>
+          <li>Avoid shadows, glare, reflections, and dark areas.</li>
+          <li>Remove anything blocking the subject.</li>
+          <li>Keep the background simple when possible.</li>
+          <li>
+            Follow the on-screen guide and hold still until capture is complete.
+          </li>
+          <li>
+            Retake the image if it is blurry, poorly lit, tilted, or incomplete.
+          </li>
+        </ol>
+      </div>
     </main>
 
     <script>
@@ -1011,7 +1056,7 @@
           document.getElementById("gauge").style.display = "block";
           document.getElementById("statusRow").style.display = "flex";
           document.getElementById("subtitleText").innerText =
-            `Target: 45° tilt · Rear cam`;
+            `Target: 35° tilt · Rear cam`;
         }
 
         let constraints = {
