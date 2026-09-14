@@ -7,8 +7,6 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Scalp Image Validator</title>
-    <!-- HEIC to JPEG Library -->
-    <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
     <style>
       :root {
         --primary: #2563eb;
@@ -124,14 +122,9 @@
 
       .input-methods-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 16px;
         margin-bottom: 24px;
-      }
-      @media (max-width: 480px) {
-        .input-methods-grid {
-          grid-template-columns: 1fr;
-        }
       }
 
       .input-card {
@@ -647,9 +640,6 @@
         max-height: 260px;
       }
 
-      #fileInput {
-        display: none;
-      }
     </style>
   </head>
   <body>
@@ -667,22 +657,12 @@
     <main>
       <div class="card">
         <div class="input-methods-grid">
-          <div
-            class="input-card"
-            id="dropzone"
-            onclick="document.getElementById('fileInput').click()"
-          >
-            <div class="input-icon">📁</div>
-            <div class="input-title">Gallery</div>
-            <div class="input-subtitle">Choose or drop file</div>
-          </div>
           <div class="input-card primary-action" onclick="toggleCamera()">
             <div class="input-icon">📸</div>
-            <div class="input-title">Live Camera</div>
-            <div class="input-subtitle">Guided Auto-capture</div>
+            <div class="input-title">Start Live Camera Scanner</div>
+            <div class="input-subtitle">Guided Auto-capture with angle sensors</div>
           </div>
         </div>
-        <input type="file" id="fileInput" accept="image/*" />
 
         <!-- Full Screen Camera Stream with Gyro HUD -->
         <div id="cameraContainer">
@@ -866,7 +846,6 @@
     </main>
 
     <script>
-      const fileInput = document.getElementById("fileInput");
       const resultCard = document.getElementById("resultCard");
       const thresholdSlider = document.getElementById("thresholdSlider");
       const previewImage = document.getElementById("previewImage");
@@ -890,86 +869,6 @@
 
       function updateThresholdLabel(val) {
         document.getElementById("thresholdDisplay").innerText = `${val}%`;
-      }
-
-      fileInput.addEventListener("change", (e) => {
-        if (e.target.files[0]) handleFile(e.target.files[0]);
-      });
-
-      // --- FILE UPLOAD LOGIC WITH HEIC & RESIZING ---
-      async function handleFile(file) {
-        const isHeic =
-          file.type === "image/heic" ||
-          file.type === "image/heif" ||
-          file.name.toLowerCase().endsWith(".heic");
-
-        if (!file.type.startsWith("image/") && !isHeic) {
-          return alert("Please provide a valid image file.");
-        }
-
-        stopCamera();
-        document.getElementById("metaPitch").innerText = "N/A (Upload)";
-        document.getElementById("metaRoll").innerText = "N/A (Upload)";
-
-        let fileToProcess = file;
-
-        // HEIC CONVERSION
-        if (isHeic) {
-          document.getElementById("diagnosticMessage").innerText =
-            "Converting HEIC format... Please wait.";
-          try {
-            const convertedBlob = await heic2any({
-              blob: file,
-              toType: "image/jpeg",
-              quality: 0.8,
-            });
-            fileToProcess = Array.isArray(convertedBlob)
-              ? convertedBlob[0]
-              : convertedBlob;
-          } catch (error) {
-            console.error("HEIC conversion error:", error);
-            document.getElementById("diagnosticMessage").innerText =
-              "Failed to convert HEIC image.";
-            return alert(
-              "Could not process HEIC file. Please try another image.",
-            );
-          }
-        }
-
-        // LOAD AND COMPRESS IMAGE
-        const imgUrl = URL.createObjectURL(fileToProcess);
-        const img = new Image();
-
-        img.onload = () => {
-          const MAX_DIMENSION = 1920;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height && width > MAX_DIMENSION) {
-            height *= MAX_DIMENSION / width;
-            width = MAX_DIMENSION;
-          } else if (height > MAX_DIMENSION) {
-            width *= MAX_DIMENSION / height;
-            height = MAX_DIMENSION;
-          }
-
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // COMPRESS TO WEBP (Fixes 413 error)
-          canvas.toBlob(
-            (compressedBlob) => {
-              previewImage.src = URL.createObjectURL(compressedBlob);
-              uploadImageBlob(compressedBlob);
-            },
-            "image/webp",
-            0.75,
-          );
-        };
-        img.src = imgUrl;
       }
 
       async function uploadImageBlob(blob) {
@@ -1029,7 +928,6 @@
       }
 
       function resetTest() {
-        fileInput.value = "";
         resultCard.style.display = "none";
         stopCamera();
         window.scrollTo(0, 0);
