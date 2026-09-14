@@ -914,15 +914,27 @@
 
         try {
           const apiPath =
-            window.location.hostname === "localhost" ||
-            window.location.hostname === "127.0.0.1"
-              ? `http://localhost:8000/validate?threshold=${thresholdVal}`
+            window.location.protocol === "file:"
+              ? `http://localhost:5003/validate?threshold=${thresholdVal}`
               : `/validate?threshold=${thresholdVal}`;
           const res = await fetch(apiPath, { method: "POST", body: formData });
+          if (!res.ok) {
+            throw new Error(`Server returned HTTP ${res.status}`);
+          }
           renderResults(await res.json());
         } catch (err) {
+          console.error("Validation error:", err);
+          document.getElementById("verdictBadge").className =
+            "verdict-badge rejected";
+          document.getElementById("verdictBadge").innerText = "✕ ERROR";
+          document.getElementById("confidenceScore").className =
+            "meter-score rejected";
+          document.getElementById("confidenceScore").innerText = "—";
+          document.getElementById("progressBarFill").className =
+            "progress-bar-fill rejected";
+          document.getElementById("progressBarFill").style.width = "0%";
           document.getElementById("diagnosticMessage").innerText =
-            "Network error.";
+            `Network error: ${err.message || "Failed to reach backend server"}`;
         }
       }
 
@@ -1160,9 +1172,8 @@
 
               try {
                 const apiPath =
-                  window.location.hostname === "localhost" ||
-                  window.location.hostname === "127.0.0.1"
-                    ? `http://localhost:8000/validate?threshold=${thresholdVal}`
+                  window.location.protocol === "file:"
+                    ? `http://localhost:5003/validate?threshold=${thresholdVal}`
                     : `/validate?threshold=${thresholdVal}`;
                 const res = await fetch(apiPath, {
                   method: "POST",

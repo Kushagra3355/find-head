@@ -5,4 +5,5 @@ tensorflow>=2.16.1
 numpy<2.0.0
 Pillow>=10.2.0
 tflite-runtime
+ai-edge-litert
 opencv-python

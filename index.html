@@ -981,15 +981,27 @@
 
         try {
           const apiPath =
-            window.location.hostname === "localhost" ||
-            window.location.hostname === "127.0.0.1"
-              ? `http://localhost:8000/validate?threshold=${thresholdVal}`
+            window.location.protocol === "file:"
+              ? `http://localhost:5003/validate?threshold=${thresholdVal}`
               : `/validate?threshold=${thresholdVal}`;
           const res = await fetch(apiPath, { method: "POST", body: formData });
+          if (!res.ok) {
+            throw new Error(`Server returned HTTP ${res.status}`);
+          }
           renderResults(await res.json());
         } catch (err) {
+          console.error("Validation error:", err);
+          document.getElementById("verdictBadge").className =
+            "verdict-badge rejected";
+          document.getElementById("verdictBadge").innerText = "✕ ERROR";
+          document.getElementById("confidenceScore").className =
+            "meter-score rejected";
+          document.getElementById("confidenceScore").innerText = "—";
+          document.getElementById("progressBarFill").className =
+            "progress-bar-fill rejected";
+          document.getElementById("progressBarFill").style.width = "0%";
           document.getElementById("diagnosticMessage").innerText =
-            "Network error.";
+            `Network error: ${err.message || "Failed to reach backend server"}`;
         }
       }
 
@@ -1255,9 +1267,8 @@
 
               try {
                 const apiPath =
-                  window.location.hostname === "localhost" ||
-                  window.location.hostname === "127.0.0.1"
-                    ? `http://localhost:8000/validate?threshold=${thresholdVal}`
+                  window.location.protocol === "file:"
+                    ? `http://localhost:5003/validate?threshold=${thresholdVal}`
                     : `/validate?threshold=${thresholdVal}`;
                 const res = await fetch(apiPath, {
                   method: "POST",
@@ -1373,7 +1384,6 @@
         document.body.style.overflow = "auto";
       }
 
-      // THE TWO-IMAGE TRICK FOR FLAWLESS CAPTURE AND ACCURATE AI
       function captureCameraSnapshot() {
         isScanning = false;
         const video = document.getElementById("cameraVideo");
@@ -1381,19 +1391,7 @@
         const vw = video.videoWidth;
         const vh = video.videoHeight;
 
-        // 1. CREATE FULL IMAGE (For UI Display & User Download)
-        const fullCanvas = document.createElement("canvas");
-        fullCanvas.width = vw;
-        fullCanvas.height = vh;
-        const fullCtx = fullCanvas.getContext("2d");
-
-        if (currentFacingMode === "user") {
-          fullCtx.translate(vw, 0);
-          fullCtx.scale(-1, 1);
-        }
-        fullCtx.drawImage(video, 0, 0, vw, vh);
-
-        // 2. CREATE CROPPED 224x224 IMAGE (For AI evaluation to bypass 413 error and remove background noise)
+        // Create the cropped 224x224 scalp image evaluated and accepted by the model
         const cropCanvas = document.createElement("canvas");
         const cropSize = Math.min(vw, vh) * 0.8;
         const sx = (vw - cropSize) / 2;
@@ -1409,29 +1407,21 @@
         }
         cropCtx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, 224, 224);
 
-        // 3. PROCESS BOTH
-        fullCanvas.toBlob(
-          (fullBlob) => {
-            stopCamera();
+        stopCamera();
 
-            // Show the FULL image visually
-            previewImage.src = URL.createObjectURL(fullBlob);
-            document.getElementById("metaPitch").innerText =
-              currentFacingMode === "user" ? "N/A" : `${lastValidBeta}°`;
-            document.getElementById("metaRoll").innerText =
-              currentFacingMode === "user" ? "N/A" : `${lastValidGamma}°`;
+        document.getElementById("metaPitch").innerText =
+          currentFacingMode === "user" ? "N/A" : `${lastValidBeta}°`;
+        document.getElementById("metaRoll").innerText =
+          currentFacingMode === "user" ? "N/A" : `${lastValidGamma}°`;
 
-            // Send the tiny CROPPED 224x224 webp image to the AI to prevent 413 limits
-            cropCanvas.toBlob(
-              (cropBlob) => {
-                uploadImageBlob(cropBlob);
-              },
-              "image/webp",
-              0.75,
-            );
+        cropCanvas.toBlob(
+          (cropBlob) => {
+            // Display the exact image that was captured and accepted by the model
+            previewImage.src = URL.createObjectURL(cropBlob);
+            uploadImageBlob(cropBlob);
           },
-          "image/jpeg",
-          0.9,
+          "image/webp",
+          0.85,
         );
       }
     </script>

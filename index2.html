@@ -824,8 +824,7 @@
         try {
           // Fallback to localhost if '/validate' fails in dev
           const apiPath =
-            window.location.hostname === "localhost" ||
-            window.location.hostname === "127.0.0.1"
+            window.location.protocol === "file:"
               ? `http://localhost:5003/validate?threshold=${thresholdVal}`
               : `/validate?threshold=${thresholdVal}`;
 

@@ -6,17 +6,18 @@ import threading
 from pathlib import Path
 from typing import Optional
 import urllib.request
+
+# Suppress runtime verbosity
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 import numpy as np
 from PIL import Image
 import io
-import tensorflow as tf
+from ai_edge_litert.interpreter import Interpreter
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-
-# Suppress TensorFlow verbosity
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "model" / "vertex_classifier_quant.tflite"
@@ -32,7 +33,7 @@ app.add_middleware(
 if not MODEL_PATH.exists():
     raise FileNotFoundError(f"Model file not found at: {MODEL_PATH}")
 
-interpreter = tf.lite.Interpreter(model_path=str(MODEL_PATH))
+interpreter = Interpreter(model_path=str(MODEL_PATH))
 interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
@@ -63,7 +64,6 @@ async def validate_image(file: UploadFile = File(...), threshold: Optional[float
         raise HTTPException(status_code=400, detail="Failed to decode image file.")
 
     input_data = np.expand_dims(np.array(image, dtype=np.float32), axis=0)
-    input_data = tf.keras.applications.mobilenet_v3.preprocess_input(input_data)
 
     start_time = time.perf_counter()
     interpreter.set_tensor(input_details[0]['index'], input_data)
