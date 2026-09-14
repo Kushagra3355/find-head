@@ -38,7 +38,7 @@ interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-DEFAULT_THRESHOLD = 0.70
+DEFAULT_THRESHOLD = 0.85
 
 @app.get("/", response_class=FileResponse)
 async def serve_frontend():
